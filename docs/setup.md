@@ -10,7 +10,7 @@ From the project root, so relative paths resolve:
 python3 freewriteApp.py
 ```
 
-That entry loads `assets/style.qss`, registers `fonts/Lato-Regular.ttf`, and uses `app_icons/1024-mac.png`. `main.py` is the installed entry point. It always reads the stylesheet from `/usr/share/freewrite/assets/style.qss`, so it only works after the package is installed.
+That entry loads `assets/style.qss`, registers the Lato files beside the app, and uses `app_icons/1024-mac.png`. `main.py` is the installed entry point. It always reads the stylesheet from `/usr/share/freewrite/assets/style.qss`, so it only works after the package is installed.
 
 The first launch creates `~/freewrite_notes` and, when the folder is empty, writes the welcome text from `assets/default.md` as the first note.
 

@@ -2,7 +2,7 @@ import os
 import random  # Added for random placeholder selection
 from datetime import date
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
+    QApplication, QWidget, QHBoxLayout, QVBoxLayout,
     QMenu, QFileDialog, QShortcut
 )
 from PyQt5.QtGui import QFont, QTextCursor, QTextDocument, QTextOption, QKeySequence
@@ -14,6 +14,8 @@ from editing import WritingEdit, remember_backspace, saved_backspace_on, without
 from history import HistoryDrawer
 from sound import KeyClicks, remember_sound, saved_sound_on
 from switch import QuietSwitch
+from clock import QuietClock
+from typeface import BarRule, SizeCycle, TypeCycle, apply_face, text_button
 
 class ContentView(QWidget):
     def __init__(self, parent=None):
@@ -21,8 +23,7 @@ class ContentView(QWidget):
         self.entries = []
         self.text = ""
         self.is_fullscreen = False
-        self.selected_font = "Lato-Regular"
-        self.current_random_font = ""
+        self.selected_font = "Lato"
         self.time_remaining = 900
         self.timer_is_running = False
         self.is_hovering_timer = False
@@ -48,7 +49,6 @@ class ContentView(QWidget):
         self.is_hovering_theme_toggle = False
         self.did_copy_prompt = False
         self.placeholder_text = ""
-        self.available_fonts = ["Lato-Regular", "Arial", "Times New Roman"]  # Simplified
         self.font_sizes = [16, 18, 20, 22, 24, 26]
         self.placeholder_options = [
             "Begin writing", "Pick a thought and go", "Start typing",
@@ -87,13 +87,14 @@ Here's my journal entry:
 
     def init_ui(self):
         self.main_layout = QHBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_widget = QWidget()
         self.main_layout.addWidget(self.main_widget)
         self.main_v_layout = QVBoxLayout(self.main_widget)
+        self.main_v_layout.setContentsMargins(0, 0, 0, 0)
         # Text Editor with proper alignment configuration
         self.text_edit = WritingEdit(self.backspace_enabled, self.key_sound)
         self.text_edit.setPlainText(self.text)
-        self.text_edit.setFont(QFont(self.selected_font, self.font_size))
         # Critical fixes for text direction
         document = self.text_edit.document()
         option = QTextOption()
@@ -109,71 +110,8 @@ Here's my journal entry:
         self.text_edit.textChanged.connect(self.on_text_changed)
         self.fix_text_direction()
         self.main_v_layout.addWidget(self.text_edit)
-
-        # Bottom Navigation
-        self.bottom_nav = QWidget()
-        self.bottom_nav.setObjectName("bottomNav")
-        self.bottom_nav.setProperty("dark", is_dark)
-        self.bottom_nav_layout = QHBoxLayout(self.bottom_nav)
-        self.font_buttons = QWidget()
-        self.font_buttons_layout = QHBoxLayout(self.font_buttons)
-        
-        # Font Size Button
-        self.font_size_btn = QPushButton(f"{int(self.font_size)}px")
-        self.font_size_btn.setProperty("dark", is_dark)
-        self.font_size_btn.clicked.connect(self.change_font_size)
-        self.font_buttons_layout.addWidget(self.font_size_btn)
-        
-        # Font Buttons
-        for font in ["Lato", "Arial", "System", "Serif", "Random"]:
-            btn = QPushButton(font)
-            btn.setProperty("dark", is_dark)
-            btn.clicked.connect(lambda checked, f=font: self.change_font(f))
-            self.font_buttons_layout.addWidget(btn)
-        self.bottom_nav_layout.addWidget(self.font_buttons)
-        self.bottom_nav_layout.addStretch()
-        
-        #ensure that cursor doesn't move above third ine
-        # Utility Buttons
-        self.utility_buttons = QWidget()
-        self.utility_buttons_layout = QHBoxLayout(self.utility_buttons)
-        self.backspace_switch = QuietSwitch("Backspace", self.backspace_enabled, is_dark)
-        self.backspace_switch.toggled.connect(self.on_backspace_toggled)
-        self.utility_buttons_layout.addWidget(self.backspace_switch)
-        self.sound_switch = QuietSwitch("Sound", self.sound_enabled, is_dark)
-        self.sound_switch.toggled.connect(self.on_sound_toggled)
-        self.utility_buttons_layout.addWidget(self.sound_switch)
-        self.timer_btn = QPushButton("15:00")
-        self.timer_btn.setProperty("dark", is_dark)
-        self.timer_btn.clicked.connect(self.toggle_timer)
-        self.utility_buttons_layout.addWidget(self.timer_btn)
-        
-        self.chat_btn = QPushButton("Chat")
-        self.chat_btn.setProperty("dark", is_dark)
-        self.chat_btn.clicked.connect(self.show_chat_menu)
-        self.utility_buttons_layout.addWidget(self.chat_btn)
-        
-        self.fullscreen_btn = QPushButton("Fullscreen")
-        self.fullscreen_btn.setProperty("dark", is_dark)
-        self.fullscreen_btn.clicked.connect(self.toggle_fullscreen)
-        self.utility_buttons_layout.addWidget(self.fullscreen_btn)
-        
-        self.new_entry_btn = QPushButton("New Entry")
-        self.new_entry_btn.setProperty("dark", is_dark)
-        self.new_entry_btn.clicked.connect(self.create_new_entry)
-        self.utility_buttons_layout.addWidget(self.new_entry_btn)
-        
-        self.theme_toggle_btn = QPushButton("Toggle Theme")
-        self.theme_toggle_btn.setProperty("dark", is_dark)
-        self.theme_toggle_btn.clicked.connect(self.toggle_theme)
-        self.utility_buttons_layout.addWidget(self.theme_toggle_btn)
-        
-        self.history_btn = QPushButton("History")
-        self.history_btn.setProperty("dark", is_dark)
-        self.history_btn.clicked.connect(self.toggle_history)
-        self.utility_buttons_layout.addWidget(self.history_btn)
-        
-        self.bottom_nav_layout.addWidget(self.utility_buttons)
+        self.main_v_layout.setSpacing(0)
+        self._compose_bar(is_dark)
         self.main_v_layout.addWidget(self.bottom_nav)
         # History floats over the page, so the writing does not reflow when it opens.
         self._wire_history(is_dark)
@@ -187,7 +125,50 @@ Here's my journal entry:
         self.save_timer = QTimer()
         self.save_timer.timeout.connect(self.save_current_entry)
         self.save_timer.start(1000)
+        self._apply_writing_font()
 
+    def _compose_bar(self, is_dark):
+        """Type on the left, then the session tools. Everything else stays on the right."""
+        self.bottom_nav = QWidget()
+        self.bottom_nav.setObjectName("bottomNav")
+        self.bottom_nav.setProperty("dark", is_dark)
+        self.bottom_nav_layout = QHBoxLayout(self.bottom_nav)
+        self.bottom_nav_layout.setContentsMargins(18, 2, 12, 6)
+        self.bottom_nav_layout.setSpacing(0)
+        self.size_cycle = SizeCycle(self.font_sizes, self.font_size, is_dark)
+        self.size_cycle.chosen.connect(self.use_size)
+        self.type_cycle = TypeCycle(is_dark)
+        self.type_cycle.chosen.connect(self.use_typeface)
+        self.selected_font = self.type_cycle.family()
+        self.bar_rule = BarRule(is_dark)
+        self.backspace_switch = QuietSwitch("Backspace", self.backspace_enabled, is_dark)
+        self.backspace_switch.toggled.connect(self.on_backspace_toggled)
+        self.sound_switch = QuietSwitch("Sound", self.sound_enabled, is_dark)
+        self.sound_switch.toggled.connect(self.on_sound_toggled)
+        self.clock = QuietClock(is_dark)
+        self.clock.clicked.connect(self.toggle_timer)
+        self.chat_btn = text_button("Chat", is_dark)
+        self.chat_btn.clicked.connect(self.show_chat_menu)
+        self.fullscreen_btn = text_button("Fullscreen", is_dark)
+        self.fullscreen_btn.clicked.connect(self.toggle_fullscreen)
+        self.new_entry_btn = text_button("New Entry", is_dark)
+        self.new_entry_btn.clicked.connect(self.create_new_entry)
+        self.theme_toggle_btn = text_button("Toggle Theme", is_dark)
+        self.theme_toggle_btn.clicked.connect(self.toggle_theme)
+        self.history_btn = text_button("History", is_dark)
+        self.history_btn.clicked.connect(self.toggle_history)
+        for widget, gap in (
+            (self.size_cycle, 2), (self.type_cycle, 16), (self.bar_rule, 16),
+            (self.backspace_switch, 14), (self.sound_switch, 12), (self.clock, 0),
+        ):
+            self._add_bar(widget, gap)
+        self.bottom_nav_layout.addStretch(1)
+        for button in (self.chat_btn, self.fullscreen_btn, self.new_entry_btn, self.theme_toggle_btn, self.history_btn):
+            self._add_bar(button, 0)
+
+    def _add_bar(self, widget, gap):
+        self.bottom_nav_layout.addWidget(widget, 0, Qt.AlignVCenter)
+        if gap: self.bottom_nav_layout.addSpacing(gap)
 
     def _wire_history(self, is_dark):
         self.history = HistoryDrawer(self)
@@ -242,42 +223,41 @@ Here's my journal entry:
         self.key_sound.set_enabled(on)
         if self.sound_switch.was_pointer(): self.text_edit.setFocus()
 
-    def change_font_size(self):
-        current_index = self.font_sizes.index(self.font_size)
-        self.font_size = self.font_sizes[(current_index + 1) % len(self.font_sizes)]
-        self.font_size_btn.setText(f"{int(self.font_size)}px")
-        self.text_edit.setFont(QFont(self.selected_font, self.font_size))
+    def use_size(self, pixels):
+        self.font_size = int(pixels)
+        self._apply_writing_font()
+        self._return_to_page(self.size_cycle)
 
-    def change_font(self, font):
-        if font == "Random":
-            self.selected_font = self.available_fonts[random.randint(0, len(self.available_fonts) - 1)]
-            self.current_random_font = self.selected_font
-        else:
-            self.selected_font = {"Lato": "Lato-Regular", "Arial": "Arial", "System": "Arial", "Serif": "Times New Roman"}[font]
-            self.current_random_font = ""
-        self.text_edit.setFont(QFont(self.selected_font, self.font_size))
+    def use_typeface(self, family):
+        self.selected_font = family
+        self._apply_writing_font()
+        self._return_to_page(self.type_cycle)
+
+    def _apply_writing_font(self):
+        apply_face(self.text_edit, self.selected_font, self.font_size)
+
+    def _return_to_page(self, control):
+        if control.was_pointer(): self.text_edit.setFocus()
 
     def toggle_timer(self):
         self.timer_is_running = not self.timer_is_running
-        if not self.timer_is_running:
-            self.time_remaining = 900
+        # Stopping rests at 15:00. Starting from zero begins a fresh fifteen minutes.
+        if not self.timer_is_running or self.time_remaining <= 0: self.time_remaining = 900
         self.update_timer_button()
+        self._return_to_page(self.clock)
 
     def update_timer(self):
         if self.timer_is_running and self.time_remaining > 0:
             self.time_remaining -= 1
             self.update_timer_button()
-        elif self.time_remaining == 0:
+            return
+        if self.timer_is_running and self.time_remaining <= 0:
             self.timer_is_running = False
             self.bottom_nav_opacity = 1.0
+            self.update_timer_button()
 
     def update_timer_button(self):
-        if not self.timer_is_running and self.time_remaining == 900:
-            self.timer_btn.setText("15:00")
-        else:
-            minutes = self.time_remaining // 60
-            seconds = self.time_remaining % 60
-            self.timer_btn.setText(f"{minutes}:{seconds:02d}")
+        self.clock.show_time(self.time_remaining, self.timer_is_running)
 
     def select_entry(self, entry):
         if self.selected_entry_id:
@@ -319,60 +299,27 @@ Here's my journal entry:
     
 
 
-    def restore_font_size_on_toggle(self, font_size_before_toggle):
-        self.font_size_btn.setText(f"{font_size_before_toggle}px")
-        self.text_edit.setFont(QFont(self.selected_font, font_size_before_toggle))
-
-
     def toggle_theme(self):
-        # Store current font size before theme change
-        current_font_size = int(self.font_size)
         self.color_scheme = "dark" if self.color_scheme == "light" else "light"
         QSettings("humansongs", "freewrite").setValue("colorScheme", self.color_scheme)
-        
-        # Apply theme to all widgets
         is_dark = self.color_scheme == "dark"
-        
-        # Apply property to parent main window
         if hasattr(self, 'parent') and self.parent() is not None:
             self.parent().setProperty("dark", is_dark)
             self.parent().style().unpolish(self.parent())
             self.parent().style().polish(self.parent())
-        
-        # Set property for all widgets
-        for widget in [self.text_edit, self.bottom_nav, self.font_size_btn,
-                      self.timer_btn, self.chat_btn, self.fullscreen_btn,
-                      self.new_entry_btn, self.theme_toggle_btn, self.history_btn]:
-            if widget:
-                widget.setProperty("dark", is_dark)
-                widget.style().unpolish(widget)
-                widget.style().polish(widget)
-        
-        # Apply to all buttons in font_buttons
-        for i in range(self.font_buttons_layout.count()):
-            widget = self.font_buttons_layout.itemAt(i).widget()
-            if widget:
-                widget.setProperty("dark", is_dark)
-                widget.style().unpolish(widget)
-                widget.style().polish(widget)
-        
-        # Apply to all buttons in utility_buttons
-        for i in range(self.utility_buttons_layout.count()):
-            widget = self.utility_buttons_layout.itemAt(i).widget()
-            if widget:
-                widget.setProperty("dark", is_dark)
-                widget.style().unpolish(widget)
-                widget.style().polish(widget)
-        
+        for widget in (
+            self.text_edit, self.bottom_nav, self.size_cycle, self.type_cycle, self.bar_rule,
+            self.backspace_switch, self.sound_switch, self.clock, self.chat_btn, self.fullscreen_btn,
+            self.new_entry_btn, self.theme_toggle_btn, self.history_btn,
+        ):
+            widget.setProperty("dark", is_dark)
+            widget.style().unpolish(widget)
+            widget.style().polish(widget)
         # The theme file reloads after this, and that wipes a palette set too early.
         self.update_styles()
+        self._apply_writing_font()
         self.history.set_dark(is_dark)
         self._paint_history_button()
-        
-        # Restore font size
-        self.restore_font_size_on_toggle(current_font_size)
-
-        # Update entries display to ensure new widgets have the theme
         self.update_entries_display()
 
 
@@ -434,6 +381,7 @@ Here's my journal entry:
                 cursor = self.text_edit.textCursor()
                 cursor.movePosition(QTextCursor.End)
                 self.text_edit.setTextCursor(cursor)
+                self._apply_writing_font()
         except Exception as e:
             print(f"Error loading entry: {e}")
 
@@ -457,6 +405,7 @@ Here's my journal entry:
         cursor = self.text_edit.textCursor()
         cursor.movePosition(QTextCursor.End)
         self.text_edit.setTextCursor(cursor)
+        self._apply_writing_font()
         self.update_entries_display()
 
     def update_preview_text(self, entry):

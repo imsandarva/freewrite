@@ -6,6 +6,8 @@
 main.py / freewriteApp.py     window, stylesheet, locale, Lato
         ContentView.py        session: editor, bar, save loop, chat, PDF
             editing.py        the editor, and which keys count as typing
+            typeface.py       the one face control, the size control, applying a face
+            clock.py          the 15:00 countdown
             switch.py         the pill used for Backspace and Sound
             sound.py          key clicks
             notes.py          names, catalog, atomic writes
@@ -14,7 +16,17 @@ main.py / freewriteApp.py     window, stylesheet, locale, Lato
         fonts/                Lato (OFL)
 ```
 
-The stylesheet in `assets/style.qss` keys off a `dark` property on the window, the editor, the bar, and the buttons. History and the pills paint themselves. A widget palette would be wiped the next time the stylesheet is applied, so those surfaces keep their own colors.
+The stylesheet in `assets/style.qss` keys off a `dark` property on the window, the editor, the bar, and the buttons. It does not set a font on the editor. History, the pills, the face control, the size control, and the clock paint themselves. A widget palette would be wiped the next time the stylesheet is applied, so those surfaces keep their own colors.
+
+## The bar
+
+The left side is the writing setup, in this order: size, face, a short rule, Backspace, Sound, the clock. The right side is the rest of the session: Chat, Fullscreen, New Entry, Toggle Theme, History.
+
+Size steps 16, 18, 20, 22, 24, 26. The face starts at Lato and steps through Arial, System, and Serif, then back to Lato. Arial is Liberation Sans when Arial is not installed. System is the desktop’s interface face. Serif prefers Gentium Book Basic, then Gentium, Liberation Serif, and a few other book faces. The word is drawn in the face it names and crossfades into the next one. The page, including words already written, changes on the click.
+
+`apply_face` sets the widget font, the document default, and the characters already on the page, and it puts the caret back. Theme reload polishes the editor and would otherwise drop the widget font to the application default. The characters keep the face.
+
+The clock reads 15:00 until it is started. Digits sit in fixed cells. While it runs they warm and a small mark shows beside them. Stopping early returns to 15:00. Reaching zero stops the clock; the next start begins a fresh fifteen minutes. A pointer click on the size, the face, a pill, or the clock returns focus to the page.
 
 ## A note on disk
 

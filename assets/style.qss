@@ -1,7 +1,7 @@
 
 QMainWindow {
     background-color: #ffffff;
-    font-family: 'Lato-Regular';
+    font-family: Lato;
     font-size: 14px;
 }
 
@@ -9,47 +9,52 @@ QMainWindow[dark="true"] {
     background-color: #000000;
 }
 
+/* Face and size belong to the page. A font here would replace them on the next theme reload. */
 QTextEdit {
     background-color: #ffffff;
-    color: #333333;
-    font-family: 'Lato-Regular';
-    font-size: 18px;
-    padding: 10px;
+    color: #2A2622;
+    selection-background-color: rgba(166, 132, 91, 0.32);
+    selection-color: #2A2622;
+    padding: 18px 22px 12px 22px;
     border: none;
 }
 
 QTextEdit[dark="true"] {
     background-color: #000000;
-    color: #e6e6e6;
+    color: #E7E1D8;
+    selection-background-color: rgba(212, 180, 150, 0.28);
+    selection-color: #E7E1D8;
 }
 
 QPushButton {
     background-color: transparent;
-    color: #808080;
+    color: #8A8178;
     border: none;
-    padding: 8px;
+    padding: 6px 8px;
+    font-family: Lato;
     font-size: 13px;
 }
 
 QPushButton:hover {
-    color: #000000;
+    color: #1C1917;
 }
 
 QPushButton[dark="true"] {
-    color: #808080;
+    color: #9C958C;
 }
 
 QPushButton:hover[dark="true"] {
-    color: #ffffff;
+    color: #F4F1EC;
 }
 
 QWidget#bottomNav {
     background-color: #ffffff;
-    padding: 10px;
+    border-top: 1px solid rgba(28, 25, 23, 0.08);
 }
 
 QWidget#bottomNav[dark="true"] {
     background-color: #000000;
+    border-top: 1px solid rgba(247, 244, 239, 0.08);
 }
 
 QWidget#sidebar {

@@ -1,7 +1,8 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtGui import QFontDatabase, QIcon
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QSettings
+from typeface import load_lato
 from ContentView import ContentView
 
 class FreewriteApp(QMainWindow):
@@ -18,9 +19,7 @@ class FreewriteApp(QMainWindow):
         # Set the dark property based on current scheme
         self.setProperty("dark", self.color_scheme == "dark")
 
-        # Load fonts
-        font_db = QFontDatabase()
-        font_db.addApplicationFont("fonts/Lato-Regular.ttf")
+        load_lato()
 
         # Set central widget
         self.content_view = ContentView(self)
