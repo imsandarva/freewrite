@@ -1,44 +1,25 @@
 import os
-import uuid
-import re
 import random  # Added for random placeholder selection
-from datetime import datetime, date
+from datetime import date
 from PyQt5.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QTextEdit, QPushButton,
-    QScrollArea, QLabel, QMenu, QFileDialog
+    QApplication, QWidget, QHBoxLayout, QVBoxLayout, QPushButton,
+    QMenu, QFileDialog, QShortcut
 )
-from PyQt5.QtGui import QFont, QTextCursor, QTextDocument, QTextOption  # Added QTextOption
+from PyQt5.QtGui import QFont, QTextCursor, QTextDocument, QTextOption, QKeySequence
 from PyQt5.QtCore import Qt, QTimer, QSettings, QUrl
 from PyQt5.Qt import QDesktopServices
-from PyQt5.QtWidgets import QApplication
-
-class HumanEntry:
-    def __init__(self, id, date, filename, preview_text):
-        self.id = id
-        self.date = date
-        self.filename = filename
-        self.preview_text = preview_text
-
-    @staticmethod
-    def create_new():
-        id = uuid.uuid4()
-        now = datetime.now()
-        date_formatter = "%Y-%m-%d-%H-%M-%S"
-        date_string = now.strftime(date_formatter)
-        display_formatter = "%b %d"
-        display_date = now.strftime(display_formatter)
-        return HumanEntry(
-            id=id,
-            date=display_date,
-            filename=f"[{id}]-[{date_string}].md",
-            preview_text=""
-        )
+from PyQt5.QtPrintSupport import QPrinter
+from notes import HumanEntry, NoteLibrary, history_preview
+from editing import WritingEdit, remember_backspace, saved_backspace_on, without_top_gap
+from history import HistoryDrawer
+from sound import KeyClicks, remember_sound, saved_sound_on
+from switch import QuietSwitch
 
 class ContentView(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.entries = []
-        self.text = "\n\n"
+        self.text = ""
         self.is_fullscreen = False
         self.selected_font = "Lato-Regular"
         self.current_random_font = ""
@@ -57,22 +38,26 @@ class ContentView(QWidget):
         self.showing_chat_menu = False
         self.is_hovering_new_entry = False
         self.is_hovering_clock = False
-        self.showing_sidebar = False
+        self._history_open = False
         self.hovered_trash_id = None
         self.hovered_export_id = None
         self.color_scheme = QSettings("humansongs", "freewrite").value("colorScheme", "light")
+        self.backspace_enabled = saved_backspace_on()
+        self.sound_enabled = saved_sound_on()
+        self.key_sound = KeyClicks(self.sound_enabled)
         self.is_hovering_theme_toggle = False
         self.did_copy_prompt = False
         self.placeholder_text = ""
         self.available_fonts = ["Lato-Regular", "Arial", "Times New Roman"]  # Simplified
         self.font_sizes = [16, 18, 20, 22, 24, 26]
         self.placeholder_options = [
-            "\n\nBegin writing", "\n\nPick a thought and go", "\n\nStart typing",
-            "\n\nWhat's on your mind", "\n\nJust start", "\n\nType your first thought",
-            "\n\nStart with one sentence", "\n\nJust say it"
+            "Begin writing", "Pick a thought and go", "Start typing",
+            "What's on your mind", "Just start", "Type your first thought",
+            "Start with one sentence", "Just say it"
         ]
         self.documents_directory = os.path.join(os.path.expanduser("~"), "freewrite_notes")
         os.makedirs(self.documents_directory, exist_ok=True)
+        self.library = NoteLibrary(self.documents_directory)
         self.ai_chat_prompt = """
 below is my journal entry. wyt? talk through it with me like a friend. don't therpaize me and give me a whole breakdown, don't repeat my thoughts with headings. really take all of this, and tell me back stuff truly as if you're an old homie.
 
@@ -106,7 +91,7 @@ Here's my journal entry:
         self.main_layout.addWidget(self.main_widget)
         self.main_v_layout = QVBoxLayout(self.main_widget)
         # Text Editor with proper alignment configuration
-        self.text_edit = QTextEdit()
+        self.text_edit = WritingEdit(self.backspace_enabled, self.key_sound)
         self.text_edit.setPlainText(self.text)
         self.text_edit.setFont(QFont(self.selected_font, self.font_size))
         # Critical fixes for text direction
@@ -149,11 +134,15 @@ Here's my journal entry:
         self.bottom_nav_layout.addStretch()
         
         #ensure that cursor doesn't move above third ine
-        self.text_edit.cursorPositionChanged.connect(self.enforce_minimum_cursor_position)
-
         # Utility Buttons
         self.utility_buttons = QWidget()
         self.utility_buttons_layout = QHBoxLayout(self.utility_buttons)
+        self.backspace_switch = QuietSwitch("Backspace", self.backspace_enabled, is_dark)
+        self.backspace_switch.toggled.connect(self.on_backspace_toggled)
+        self.utility_buttons_layout.addWidget(self.backspace_switch)
+        self.sound_switch = QuietSwitch("Sound", self.sound_enabled, is_dark)
+        self.sound_switch.toggled.connect(self.on_sound_toggled)
+        self.utility_buttons_layout.addWidget(self.sound_switch)
         self.timer_btn = QPushButton("15:00")
         self.timer_btn.setProperty("dark", is_dark)
         self.timer_btn.clicked.connect(self.toggle_timer)
@@ -181,30 +170,13 @@ Here's my journal entry:
         
         self.history_btn = QPushButton("History")
         self.history_btn.setProperty("dark", is_dark)
-        self.history_btn.clicked.connect(self.toggle_sidebar)
+        self.history_btn.clicked.connect(self.toggle_history)
         self.utility_buttons_layout.addWidget(self.history_btn)
         
         self.bottom_nav_layout.addWidget(self.utility_buttons)
         self.main_v_layout.addWidget(self.bottom_nav)
-
-        # Sidebar
-        self.sidebar = QWidget()
-        self.sidebar.setObjectName("sidebar")
-        self.sidebar.setProperty("dark", is_dark)
-        self.sidebar_layout = QVBoxLayout(self.sidebar)
-        self.history_btn = QPushButton("History")
-        self.history_btn.setProperty("dark", is_dark)
-        self.history_btn.clicked.connect(self.open_documents_directory)
-        self.sidebar_layout.addWidget(self.history_btn)
-        
-        self.entries_scroll = QScrollArea()
-        self.entries_widget = QWidget()
-        self.entries_layout = QVBoxLayout(self.entries_widget)
-        self.entries_scroll.setWidget(self.entries_widget)
-        self.entries_scroll.setWidgetResizable(True)
-        self.sidebar_layout.addWidget(self.entries_scroll)
-        self.main_layout.addWidget(self.sidebar)
-        self.sidebar.setVisible(False)
+        # History floats over the page, so the writing does not reflow when it opens.
+        self._wire_history(is_dark)
 
         # Timer
         self.timer = QTimer()
@@ -217,27 +189,58 @@ Here's my journal entry:
         self.save_timer.start(1000)
 
 
-    def enforce_minimum_cursor_position(self):
-        """Ensure cursor never goes above the third line (after the two newlines)"""
-        cursor = self.text_edit.textCursor()
-        current_position = cursor.position()
-    
-        # Minimum position is after the initial "\n\n" (position 2)
-        if current_position < 2:
-            cursor.setPosition(2)
-            self.text_edit.setTextCursor(cursor)
+    def _wire_history(self, is_dark):
+        self.history = HistoryDrawer(self)
+        self.history.set_dark(bool(is_dark))
+        self.history.chosen.connect(self.select_entry)
+        self.history.delete_requested.connect(self.delete_entry)
+        self.history.export_requested.connect(self.export_entry_as_pdf)
+        self.history.opened.connect(self._history_shown)
+        self.history.dismissed.connect(self._history_hidden)
+        self._history_escape = QShortcut(QKeySequence(Qt.Key_Escape), self)
+        self._history_escape.setContext(Qt.WindowShortcut)
+        self._history_escape.setEnabled(False)
+        self._history_escape.activated.connect(self.history.close_sheet)
 
-    def keyPressEvent(self, event):
-        """Override keyPressEvent to prevent deleting the initial \\n\\n"""
-        cursor = self.text_edit.textCursor()
-        current_position = cursor.position()
-        
-        # Prevent backspace from deleting the initial \n\n
-        if event.key() == Qt.Key_Backspace and current_position <= 2:
-            return  # Do nothing, prevent the backspace
-        
-        # Let the parent handle other key events
-        super().keyPressEvent(event)
+    def _history_shown(self):
+        self._history_escape.setEnabled(True)
+        self._set_history_open(True)
+
+    def _history_hidden(self):
+        self._history_escape.setEnabled(False)
+        self._set_history_open(False)
+        self.text_edit.setFocus()
+
+    def _set_history_open(self, is_open):
+        self._history_open = bool(is_open)
+        self._paint_history_button()
+
+    def _paint_history_button(self):
+        if not self._history_open:
+            self.history_btn.setStyleSheet("")
+            return
+        color = "#F4F1EC" if self.color_scheme == "dark" else "#1C1917"
+        self.history_btn.setStyleSheet("QPushButton { color: %s; }" % color)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.history.fit_over(self.bottom_nav)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.history.fit_over(self.bottom_nav)
+
+    def on_backspace_toggled(self, on):
+        self.backspace_enabled = on
+        remember_backspace(on)
+        self.text_edit.set_backspace_allowed(on)
+        if self.backspace_switch.was_pointer(): self.text_edit.setFocus()
+
+    def on_sound_toggled(self, on):
+        self.sound_enabled = on
+        remember_sound(on)
+        self.key_sound.set_enabled(on)
+        if self.sound_switch.was_pointer(): self.text_edit.setFocus()
 
     def change_font_size(self):
         current_index = self.font_sizes.index(self.font_size)
@@ -281,102 +284,10 @@ Here's my journal entry:
             self.save_current_entry()
         self.selected_entry_id = entry.id
         self.load_entry(entry)
-
+        self.update_entries_display()
 
     def update_entries_display(self):
-        # Clear existing widgets
-        while self.entries_layout.count():
-            child = self.entries_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-        
-        # Check current theme
-        is_dark = self.color_scheme == "dark"
-        
-        # Remove spacing between entries
-        self.entries_layout.setSpacing(0)
-        self.entries_layout.setContentsMargins(0, 0, 0, 0)
- 
-        # Add entries to the sidebar
-        for entry in self.entries:
-            entry_widget = QWidget()
-            entry_widget.setProperty("dark", is_dark)
-            entry_widget.setObjectName("entryItem")  # Add an object name for styling
-            
-            entry_layout = QHBoxLayout(entry_widget)
-            entry_layout.setContentsMargins(8, 2, 8, 2)  # Reduce internal margins
-            
-            # Entry title/preview
-            label = QLabel(f"{entry.date}: {entry.preview_text}")
-            label.setProperty("dark", is_dark)
-            label.setWordWrap(True)
-            entry_layout.addWidget(label, 1)
-            
-            # Delete button
-            delete_btn = QPushButton("🗑️")
-            delete_btn.setProperty("dark", is_dark)
-            delete_btn.setMaximumWidth(30)
-            delete_btn.clicked.connect(lambda checked, e=entry: self.delete_entry(e))
-            entry_layout.addWidget(delete_btn)
-            
-            # Export button
-            export_btn = QPushButton("📤")
-            export_btn.setProperty("dark", is_dark)
-            export_btn.setMaximumWidth(30)
-            export_btn.clicked.connect(lambda checked, e=entry: self.export_entry_as_pdf(e))
-            entry_layout.addWidget(export_btn)
-            
-            self.entries_layout.addWidget(entry_widget)
-            
-            # Make entry clickable to load
-            entry_widget.mousePressEvent = lambda event, e=entry: self.select_entry(e)
-        
-        # Set background for entries widget to match theme
-        self.entries_widget.setProperty("dark", is_dark)
-        self.entries_widget.setObjectName("entriesContainer")
-        self.entries_widget.setContentsMargins(0, 0, 0, 0)
-        
-        # Also set properties for the scroll area
-        self.entries_scroll.setProperty("dark", is_dark)
-        self.entries_scroll.setObjectName("entriesScroll")
-        self.entries_scroll.setContentsMargins(0, 0, 0, 0)
-        
-        # Apply stylesheet dynamically
-        self.update_entries_styles(is_dark)
-        
-        # Update the sidebar entries widget size
-        self.entries_widget.adjustSize()
-
-    def update_entries_styles(self, is_dark):
-        # Force style refresh for all entry widgets
-        app = QApplication.instance()
-        
-        # Refresh entries scroll area
-        self.entries_scroll.style().unpolish(self.entries_scroll)
-        self.entries_scroll.style().polish(self.entries_scroll)
-        
-        # Refresh entries widget
-        self.entries_widget.style().unpolish(self.entries_widget)
-        self.entries_widget.style().polish(self.entries_widget)
-        
-        # Refresh all entry widgets and their children
-        for i in range(self.entries_layout.count()):
-            entry_widget = self.entries_layout.itemAt(i).widget()
-            if entry_widget:
-                entry_widget.style().unpolish(entry_widget)
-                entry_widget.style().polish(entry_widget)
-                
-                # Refresh all children in the entry layout
-                entry_layout = entry_widget.layout()
-                if entry_layout:
-                    for j in range(entry_layout.count()):
-                        child = entry_layout.itemAt(j).widget()
-                        if child:
-                            child.style().unpolish(child)
-                            child.style().polish(child)
-        
-        # Process events to force update
-        app.processEvents()
+        self.history.set_entries(self.entries, self.selected_entry_id)
 
     def show_chat_menu(self):
         menu = QMenu(self.chat_btn)
@@ -429,8 +340,8 @@ Here's my journal entry:
             self.parent().style().polish(self.parent())
         
         # Set property for all widgets
-        for widget in [self.text_edit, self.bottom_nav, self.sidebar, self.font_size_btn, 
-                      self.timer_btn, self.chat_btn, self.fullscreen_btn, 
+        for widget in [self.text_edit, self.bottom_nav, self.font_size_btn,
+                      self.timer_btn, self.chat_btn, self.fullscreen_btn,
                       self.new_entry_btn, self.theme_toggle_btn, self.history_btn]:
             if widget:
                 widget.setProperty("dark", is_dark)
@@ -453,25 +364,10 @@ Here's my journal entry:
                 widget.style().unpolish(widget)
                 widget.style().polish(widget)
         
-        # Apply to all widgets in entries_layout
-        for i in range(self.entries_layout.count()):
-            entry_widget = self.entries_layout.itemAt(i).widget()
-            if entry_widget:
-                entry_widget.setProperty("dark", is_dark)
-                entry_widget.style().unpolish(entry_widget)
-                entry_widget.style().polish(entry_widget)
-                
-                # Apply to child widgets in the entry
-                entry_layout = entry_widget.layout()
-                for j in range(entry_layout.count()):
-                    child_widget = entry_layout.itemAt(j).widget()
-                    if child_widget:
-                        child_widget.setProperty("dark", is_dark)
-                        child_widget.style().unpolish(child_widget)
-                        child_widget.style().polish(child_widget)
-        
-        # Refresh the styles
+        # The theme file reloads after this, and that wipes a palette set too early.
         self.update_styles()
+        self.history.set_dark(is_dark)
+        self._paint_history_button()
         
         # Restore font size
         self.restore_font_size_on_toggle(current_font_size)
@@ -489,12 +385,8 @@ Here's my journal entry:
         except Exception as e:
             print(f"Error loading styles: {e}")
 
-    def toggle_sidebar(self):
-        self.showing_sidebar = not self.showing_sidebar
-        self.sidebar.setVisible(self.showing_sidebar)
-
-    def open_documents_directory(self):
-        QDesktopServices.openUrl(QUrl.fromLocalFile(self.documents_directory))
+    def toggle_history(self):
+        self.history.toggle()
 
 
     def fix_text_direction(self):
@@ -515,23 +407,7 @@ Here's my journal entry:
         self.text_edit.setLayoutDirection(Qt.LeftToRight)
 
     def on_text_changed(self):
-        """Handle text changes and ensure proper formatting"""
-        text = self.text_edit.toPlainText()
-        cursor_position = self.text_edit.textCursor().position()
-        # Only prepend \n\n if the text doesn't already start with it
-        if not text.startswith("\n\n") and text.strip():
-            text = "\n\n" + text.lstrip("\n")
-            self.text_edit.blockSignals(True)  # Prevent recursive signals
-            self.text_edit.setPlainText(text)
-            # Restore cursor position (adjust for added characters)
-            cursor = self.text_edit.textCursor()
-            new_position = max(2, cursor_position + 2)
-            cursor.setPosition(min(new_position, len(text)))
-            self.text_edit.setTextCursor(cursor)
-            # Fix text direction after text change
-            self.fix_text_direction()
-            self.text_edit.blockSignals(False)
-        self.text = text
+        self.text = self.text_edit.toPlainText()
         self.save_current_entry()
 
     def save_current_entry(self):
@@ -541,25 +417,23 @@ Here's my journal entry:
                 self.save_entry(entry)
 
     def save_entry(self, entry):
-        os.makedirs(self.documents_directory, exist_ok=True)
-        file_path = os.path.join(self.documents_directory, entry.filename)
+        previous = entry.preview_text
         try:
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(self.text)
+            self.library.save(entry, self.text)
             self.update_preview_text(entry)
+            if entry.preview_text != previous: self.update_entries_display()
         except Exception as e:
             print(f"Error saving entry: {e}")
 
     def load_entry(self, entry):
         file_path = os.path.join(self.documents_directory, entry.filename)
         try:
-            if os.path.exists(file_path):
-                with open(file_path, "r", encoding="utf-8") as f:
-                    self.text = f.read()
-                    self.text_edit.setPlainText(self.text)
-                    cursor = self.text_edit.textCursor()
-                    cursor.movePosition(QTextCursor.End)
-                    self.text_edit.setTextCursor(cursor)
+            if entry.filename and os.path.exists(file_path):
+                self.text = without_top_gap(self.library.read(entry))
+                self.text_edit.setPlainText(self.text)
+                cursor = self.text_edit.textCursor()
+                cursor.movePosition(QTextCursor.End)
+                self.text_edit.setTextCursor(cursor)
         except Exception as e:
             print(f"Error loading entry: {e}")
 
@@ -570,13 +444,13 @@ Here's my journal entry:
         if len(self.entries) == 1:
             try:
                 with open("assets/default.md", "r", encoding="utf-8") as f:
-                    self.text = "\n\n" + f.read()
+                    self.text = f.read()
             except:
-                self.text = "\n\n"
+                self.text = ""
             self.save_entry(new_entry)
             self.update_preview_text(new_entry)
         else:
-            self.text = "\n\n"
+            self.text = ""
             self.placeholder_text = random.choice(self.placeholder_options)
             self.save_entry(new_entry)
         self.text_edit.setPlainText(self.text)
@@ -586,11 +460,8 @@ Here's my journal entry:
         self.update_entries_display()
 
     def update_preview_text(self, entry):
-        file_path = os.path.join(self.documents_directory, entry.filename)
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                content = f.read().replace("\n", " ").strip()
-                entry.preview_text = content[:30] + "..." if len(content) > 30 else content
+            entry.preview_text = history_preview(self.library.read(entry))
         except Exception as e:
             print(f"Error updating preview: {e}")
 
@@ -615,9 +486,8 @@ Here's my journal entry:
         self.did_copy_prompt = True
 
     def delete_entry(self, entry):
-        file_path = os.path.join(self.documents_directory, entry.filename)
         try:
-            os.remove(file_path)
+            self.library.delete(entry)
             self.entries = [e for e in self.entries if e.id != entry.id]
             if self.selected_entry_id == entry.id:
                 if self.entries:
@@ -665,7 +535,6 @@ Here's my journal entry:
         return "-".join(words) if words else f"Entry {date}"
 
     def create_pdf_from_text(self, text, output_path):
-        from PyQt5.QtPrintSupport import QPrinter
         printer = QPrinter()
         printer.setOutputFormat(QPrinter.PdfFormat)
         printer.setOutputFileName(output_path)
@@ -678,27 +547,7 @@ Here's my journal entry:
     def load_existing_entries(self):
         os.makedirs(self.documents_directory, exist_ok=True)
         try:
-            files = [f for f in os.listdir(self.documents_directory) if f.endswith(".md")]
-            entries_with_dates = []
-            for file in files:
-                match_uuid = re.search(r"\[(.*?)\]", file)
-                match_date = re.search(r"\[(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\]", file)
-                if match_uuid and match_date:
-                    uuid_str = match_uuid.group(1)
-                    date_str = match_date.group(1)
-                    try:
-                        file_date = datetime.strptime(date_str, "%Y-%m-%d-%H-%M-%S")
-                        with open(os.path.join(self.documents_directory, file), "r", encoding="utf-8") as f:
-                            content = f.read().replace("\n", " ").strip()
-                            preview = content[:30] + "..." if len(content) > 30 else content
-                            display_date = file_date.strftime("%b %d")
-                            entries_with_dates.append((
-                                HumanEntry(uuid.UUID(uuid_str), display_date, file, preview),
-                                file_date
-                            ))
-                    except:
-                        continue
-            self.entries = [e[0] for e in sorted(entries_with_dates, key=lambda x: x[1], reverse=True)]
+            self.entries = self.library.load()
             today = date.today()
             has_empty_entry_today = any(
                 e.date == today.strftime("%b %d") and not e.preview_text for e in self.entries
