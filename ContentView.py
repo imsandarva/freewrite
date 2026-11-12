@@ -16,6 +16,7 @@ from sound import KeyClicks, remember_sound, saved_sound_on
 from switch import QuietSwitch
 from clock import QuietClock
 from typeface import BarRule, SizeCycle, TypeCycle, apply_face, text_button
+from paths import resource
 
 class ContentView(QWidget):
     def __init__(self, parent=None):
@@ -326,7 +327,7 @@ Here's my journal entry:
 # Replace the update_styles method
     def update_styles(self):
         try:
-            with open("assets/style.qss", "r") as f:
+            with open(resource("assets", "style.qss"), "r", encoding="utf-8") as f:
                 style_content = f.read()
                 QApplication.instance().setStyleSheet(style_content)
         except Exception as e:
@@ -391,7 +392,7 @@ Here's my journal entry:
         self.selected_entry_id = new_entry.id
         if len(self.entries) == 1:
             try:
-                with open("assets/default.md", "r", encoding="utf-8") as f:
+                with open(resource("assets", "default.md"), "r", encoding="utf-8") as f:
                     self.text = f.read()
             except:
                 self.text = ""

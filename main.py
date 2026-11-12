@@ -1,20 +1,20 @@
 import sys
-import os
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QLocale
-
-# Add BASE_DIR for absolute paths
-BASE_DIR = "/usr/share/freewrite"
-
+from paths import prepare_app
 from freewriteApp import FreewriteApp
-if __name__ == "__main__":
+
+
+def main():
+    # The process name is what the desktop uses to match this window to its icon.
+    sys.argv[0] = "freewrite"
     app = QApplication(sys.argv)
-    # Force LTR locale (English, US)
-    locale = QLocale(QLocale.English, QLocale.UnitedStates)
-    QLocale.setDefault(locale)
-    # Use absolute path here
-    with open(os.path.join(BASE_DIR, "assets/style.qss"), "r") as f:
-        app.setStyleSheet(f.read())
+    QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
+    prepare_app(app)
     window = FreewriteApp()
     window.show()
-    sys.exit(app.exec_())
+    return app.exec_()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

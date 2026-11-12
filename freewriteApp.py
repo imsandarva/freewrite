@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QSettings
 from typeface import load_lato
+from paths import app_icon, prepare_app
 from ContentView import ContentView
 
 class FreewriteApp(QMainWindow):
@@ -10,7 +11,7 @@ class FreewriteApp(QMainWindow):
         super().__init__()
         self.setWindowTitle("Freewrite")
         self.setGeometry(100, 100, 1100, 600)
-        self.setWindowIcon(QIcon("app_icons/1024-mac.png"))
+        self.setWindowIcon(QIcon(app_icon()))
 
         # Load color scheme from settings
         settings = QSettings("humansongs", "freewrite")
@@ -36,9 +37,9 @@ class FreewriteApp(QMainWindow):
         self.move(frame.topLeft())
 
 if __name__ == "__main__":
+    sys.argv[0] = "freewrite"
     app = QApplication(sys.argv)
-    with open("assets/style.qss", "r") as f:
-        app.setStyleSheet(f.read())
+    prepare_app(app)
     window = FreewriteApp()
     window.show()
     sys.exit(app.exec_())

@@ -4,6 +4,7 @@
 
 ```text
 main.py / freewriteApp.py     window, stylesheet, locale, Lato
+        paths.py              files beside the app, and the desktop name
         ContentView.py        session: editor, bar, save loop, chat, PDF
             editing.py        the editor, and which keys count as typing
             typeface.py       the one face control, the size control, applying a face

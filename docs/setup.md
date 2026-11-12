@@ -16,11 +16,20 @@ The first launch creates `~/freewrite_notes` and, when the folder is empty, writ
 
 ## Installed package
 
-`/usr/bin/freewrite` runs `python3 /usr/share/freewrite/main.py`. The desktop file is `freewrite.desktop` (`Office`, `WordProcessor`). Runtime dependency is `python3-pyqt5`.
+From the project root:
 
-`main.py` forces the process locale to English (United States) so the writing surface stays left to right. Theme changes still reload `assets/style.qss` from the current working directory, which is the source tree during development and is not the install path. After a theme toggle in an installed build, the stylesheet only reloads if that relative file is visible.
+```bash
+python3 packaging/build_deb.py
+sudo apt install ./dist/freewrite_1.1.0_all.deb
+```
 
-`create_deb_structure.py` regenerates the packaging skeleton under `freewrite-package/`. Edit the modules at the project root, then refresh the package tree. Do not treat the copies under `usr/share/freewrite/` as the source.
+`apt` installs `python3-pyqt5` and `libpulse0` if they are missing. After that, Freewrite is an application: search for it by name in the menu and open it from there. The command `freewrite` also starts it. The icon is the pencil in `assets/pencil_icon.png`, with the plain gray backdrop removed so it sits cleanly in the menu.
+
+The package puts the code in `/usr/share/freewrite`, the launcher at `/usr/bin/freewrite`, the menu entry at `/usr/share/applications/freewrite.desktop`, and the icon in the `hicolor` theme as `freewrite`. `Terminal=false` in that entry is what keeps it from opening a terminal window.
+
+`main.py` is the installed entry. It sets the locale to English (United States) so the writing surface stays left to right, and it names the window `freewrite` so the desktop can match it to that menu entry. Styles, the welcome note, and the icon are read from beside the code (`paths.py`), so a menu launch finds them no matter which folder the session started in. Theme changes reload that same stylesheet.
+
+Edit the modules at the project root, then run the build script again. The tree under `freewrite-package/` is an older packaging sketch and is not what `build_deb.py` ships.
 
 ## Settings
 
