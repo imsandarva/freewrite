@@ -12,6 +12,8 @@ from PyQt5.QtPrintSupport import QPrinter
 from notes import HumanEntry, NoteLibrary, history_preview
 from editing import WritingEdit, remember_backspace, saved_backspace_on, without_top_gap
 from history import HistoryDrawer
+from place import PlaceError, friendly_path, has_notes, note_count, prepare_directory, relocate, remember_directory, same_place, settle
+from choice import ask_move, tell
 from sound import KeyClicks, remember_sound, saved_sound_on
 from switch import QuietSwitch
 from clock import QuietClock
@@ -56,8 +58,7 @@ class ContentView(QWidget):
             "What's on your mind", "Just start", "Type your first thought",
             "Start with one sentence", "Just say it"
         ]
-        self.documents_directory = os.path.join(os.path.expanduser("~"), "freewrite_notes")
-        os.makedirs(self.documents_directory, exist_ok=True)
+        self.documents_directory = prepare_directory()
         self.library = NoteLibrary(self.documents_directory)
         self.ai_chat_prompt = """
 below is my journal entry. wyt? talk through it with me like a friend. don't therpaize me and give me a whole breakdown, don't repeat my thoughts with headings. really take all of this, and tell me back stuff truly as if you're an old homie.
@@ -179,6 +180,8 @@ Here's my journal entry:
         self.history.export_requested.connect(self.export_entry_as_pdf)
         self.history.opened.connect(self._history_shown)
         self.history.dismissed.connect(self._history_hidden)
+        self.history.change_requested.connect(self._choose_place)
+        self._show_place()
         self._history_escape = QShortcut(QKeySequence(Qt.Key_Escape), self)
         self._history_escape.setContext(Qt.WindowShortcut)
         self._history_escape.setEnabled(False)
@@ -387,15 +390,14 @@ Here's my journal entry:
             print(f"Error loading entry: {e}")
 
     def create_new_entry(self):
+        self._add_entry(not self.entries)
+
+    def _add_entry(self, welcome):
         new_entry = HumanEntry.create_new()
         self.entries.insert(0, new_entry)
         self.selected_entry_id = new_entry.id
-        if len(self.entries) == 1:
-            try:
-                with open(resource("assets", "default.md"), "r", encoding="utf-8") as f:
-                    self.text = f.read()
-            except:
-                self.text = ""
+        if welcome:
+            self.text = self._welcome_text()
             self.save_entry(new_entry)
             self.update_preview_text(new_entry)
         else:
@@ -407,6 +409,91 @@ Here's my journal entry:
         cursor.movePosition(QTextCursor.End)
         self.text_edit.setTextCursor(cursor)
         self._apply_writing_font()
+        self.update_entries_display()
+
+    def _welcome_text(self):
+        try:
+            with open(resource("assets", "default.md"), "r", encoding="utf-8") as handle: return handle.read()
+        except Exception:
+            return ""
+
+    def _show_place(self):
+        path = os.path.abspath(self.documents_directory)
+        self.history.set_place(friendly_path(path), path)
+
+    def _choose_place(self):
+        try:
+            self._apply_chosen_place(self._pick_folder())
+        finally:
+            self.text_edit.setFocus()
+
+    def _pick_folder(self):
+        chosen = QFileDialog.getExistingDirectory(self.window(), "Save notes in", self.documents_directory, QFileDialog.ShowDirsOnly)
+        return os.path.abspath(chosen) if chosen else ""
+
+    def _apply_chosen_place(self, chosen):
+        if not chosen or same_place(chosen, self.documents_directory): return
+        self.save_current_entry()
+        keep = None
+        if has_notes(self.documents_directory):
+            outcome = self._ask_and_maybe_move(chosen)
+            if outcome == "cancel": return
+            keep = None if outcome == "leave" else outcome
+        self._use_directory(chosen, keep)
+
+    def _ask_and_maybe_move(self, chosen):
+        dark = self.color_scheme == "dark"
+        choice = ask_move(self, os.path.abspath(chosen), dark, note_count(self.documents_directory), has_notes(chosen))
+        if choice != "move": return choice
+        try:
+            changed = relocate(self.documents_directory, chosen)
+        except PlaceError as error:
+            tell(self, error.title, error.body, dark)
+            return "cancel"
+        current = str(self.selected_entry_id) if self.selected_entry_id else ""
+        return changed.get(current, self.selected_entry_id)
+
+    def _use_directory(self, path, keep_id):
+        # Drop the selection before the folder changes, so a save in between cannot write the open page into the new folder.
+        previous = self.selected_entry_id
+        self.selected_entry_id = None
+        path = settle(path)
+        try:
+            os.makedirs(path, exist_ok=True)
+            library = NoteLibrary(path)
+            entries = library.load()
+        except Exception as error:
+            self.selected_entry_id = previous
+            print("Error opening notes folder: %s" % error)
+            tell(self, "That folder isn't available", "Your notes are still being saved in the previous place.", self.color_scheme == "dark")
+            return
+        remember_directory(path)
+        self.documents_directory = path
+        self.library = library
+        self.entries = entries
+        self._show_place()
+        kept = self._kept(keep_id)
+        if kept is not None:
+            self.selected_entry_id = kept.id
+            self.load_entry(kept)
+            self.update_entries_display()
+            return
+        self._open_folder_notes()
+
+    def _kept(self, keep_id):
+        if keep_id is None: return None
+        want = str(keep_id)
+        return next((item for item in self.entries if str(item.id) == want), None)
+
+    def _open_folder_notes(self):
+        if not self.entries:
+            self._add_entry(False)
+            return
+        today = date.today().strftime("%b %d")
+        entry = next((item for item in self.entries if item.date == today and not item.preview_text), None)
+        if entry is None: entry = self.entries[0]
+        self.selected_entry_id = entry.id
+        self.load_entry(entry)
         self.update_entries_display()
 
     def update_preview_text(self, entry):

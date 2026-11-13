@@ -80,6 +80,21 @@ def write_atomic(directory, filename, text):
     return path
 
 
+def read_records(directory):
+    """Catalog rows, or nothing when the file is missing or unreadable."""
+    path = os.path.join(directory, CATALOG_NAME)
+    try:
+        with open(path, "r", encoding="utf-8") as handle: data = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return []
+    entries = data.get("entries") if isinstance(data, dict) else None
+    return entries if isinstance(entries, list) else []
+
+
+def write_records(directory, records):
+    write_atomic(directory, CATALOG_NAME, json.dumps({"entries": records}, ensure_ascii=False, indent=2))
+
+
 class NoteLibrary:
     def __init__(self, directory):
         self.directory = directory
@@ -187,13 +202,7 @@ class NoteLibrary:
         return {rec.get("filename"): rec for rec in self._read_catalog() if rec.get("filename")}
 
     def _read_catalog(self):
-        path = os.path.join(self.directory, CATALOG_NAME)
-        try:
-            with open(path, "r", encoding="utf-8") as handle: data = json.load(handle)
-        except (OSError, json.JSONDecodeError):
-            return []
-        entries = data.get("entries") if isinstance(data, dict) else None
-        return entries if isinstance(entries, list) else []
+        return read_records(self.directory)
 
     def _write_catalog(self, entries):
         self._write_records([self._record(entry) for entry in entries])
@@ -202,7 +211,7 @@ class NoteLibrary:
         return {"id": str(entry.id), "created": entry.created.isoformat(timespec="seconds"), "filename": entry.filename}
 
     def _write_records(self, records):
-        write_atomic(self.directory, CATALOG_NAME, json.dumps({"entries": records}, ensure_ascii=False, indent=2))
+        write_records(self.directory, records)
 
     def _clear_temps(self):
         for name in os.listdir(self.directory):

@@ -6,7 +6,7 @@ Backspace and Sound are pills, with no On or Off written on them. The knob on th
 
 ## Launch
 
-`NoteLibrary.load()` reads the notes folder, migrates legacy names, and returns entries newest first.
+`NoteLibrary.load()` reads the remembered notes folder (`~/freewrite_notes` until you choose another), migrates legacy names, and returns entries newest first.
 
 - No notes: create one and, because it is the only note, fill it from `assets/default.md`.
 - Notes exist, none of them is an empty note dated today, and the folder is not a single welcome file: create an empty note and select it. The welcome check looks for the words `Welcome to Freewrite` in the only file.
@@ -25,6 +25,8 @@ Delete removes the markdown file and the catalog row. If the deleted note was op
 ## History, export, chat
 
 History toggles the sheet. It also closes on Escape (the shortcut is enabled only while the sheet is open), on the corner X, and on a click in the shaded area to the left of the sheet. Focus returns to the editor when the sheet finishes closing.
+
+The bottom of the sheet is where notes are saved. Change picks a folder. With notes already saved, the prompt offers to bring them or leave them. Esc, Cancel, or a click outside the card keeps the current folder. Leave them points History at the new folder and opens a note from it. Move them brings the old notes along, then keeps the open note on the page. The folder is remembered for the next launch.
 
 The arrow on a row saves a PDF. The open note is saved to disk first. A save dialog starts in the home directory. The suggested name is the first four words of the body, lowercased, with surrounding punctuation stripped, joined by hyphens, plus `.pdf`. Shorter notes use the words they have. An empty note uses `Entry <Mon DD>.pdf`. `QPrinter` writes plain text with 72 pt margins in the font and size currently selected. The PDF is not a markdown render.
 

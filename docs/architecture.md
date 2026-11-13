@@ -12,7 +12,9 @@ main.py / freewriteApp.py     window, stylesheet, locale, Lato
             switch.py         the pill used for Backspace and Sound
             sound.py          key clicks
             notes.py          names, catalog, atomic writes
+            place.py          which folder notes use, and moving them
             history.py        sheet that slides over the writing
+            choice.py         the prompt that asks whether old notes come along
         assets/               style.qss, default.md
         fonts/                Lato (OFL)
 ```
@@ -31,7 +33,7 @@ The clock reads 15:00 until it is started. Digits sit in fixed cells. While it r
 
 ## A note on disk
 
-`NoteLibrary` in `notes.py` owns `~/freewrite_notes`. Each note is one `.md` file plus a row in a hidden `.entries.json` catalog:
+`NoteLibrary` in `notes.py` owns one folder. That folder starts as `~/freewrite_notes` and can be changed from the bottom of History. The choice is remembered as `notesDirectory`. Each note is one `.md` file plus a row in a hidden `.entries.json` catalog:
 
 ```json
 { "entries": [ { "id": "<uuid>", "created": "<iso seconds>", "filename": "the morning was slow.md" } ] }
@@ -68,6 +70,12 @@ Opening a note drops a leading `\n\n`. Older builds stored two blank lines so th
 One `progress` value drives the motion: `0` parks the sheet past the right edge, `1` docks it. Open runs 340 ms, close 260 ms, both on the same ease-out curve, and both start from the current progress. A second click therefore reverses the sheet instead of restarting the animation. Width is `min(400, window − 72)`, or the full width when the window is under 300 px. A scrim and a short shadow fade with the same progress.
 
 The list is newest first, with a month heading whenever the month changes. The current year is just the month name. The open note is marked. Rows are rebuilt only when the set of ids, previews, dates, selection, or sheet color changes, and the scroll position is restored after a rebuild.
+
+Under the list, a pinned row shows where notes are saved. A path inside the home folder is shown as `~/...`. The full path is the tooltip. Change opens the system folder picker.
+
+If the current folder has no notes, the new folder is used immediately. If it has notes, a prompt asks whether they should come along. Dismissing it, or Cancel, leaves the folder unchanged. Leaving them keeps every old file where it is, and History then shows the new folder. An empty new folder starts a blank note, not the welcome text.
+
+Moving them transfers the markdown files and merges the catalogs. A name that already exists in the new folder becomes `stem 2.md`, so nothing is overwritten. The note that was open stays open. If the move fails, files already transferred are put back and the new folder's catalog is restored before the setting changes. A move that cannot be fully undone says so, and names both folders.
 
 ## Backspace and Sound
 

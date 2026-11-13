@@ -1,6 +1,6 @@
 # Freewrite
 
-Linux port of [Farza’s Freewrite](https://www.freewrite.io/): a single writing window meant for timed, uninterrupted freewriting. Notes are plain markdown files in `~/freewrite_notes`. There is no account, sync, or editor beyond the page you are typing on.
+Linux port of [Farza’s Freewrite](https://www.freewrite.io/): a single writing window meant for timed, uninterrupted freewriting. Notes are plain markdown files in `~/freewrite_notes`, or another folder chosen from History. There is no account, sync, or editor beyond the page you are typing on.
 
 The code that runs is the Python at the project root. `freewrite-package/` is a Debian packaging tree and can lag behind that source.
 

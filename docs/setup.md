@@ -33,14 +33,15 @@ Edit the modules at the project root, then run the build script again. The tree 
 
 ## Settings
 
-`QSettings("humansongs", "freewrite")` stores three values:
+`QSettings("humansongs", "freewrite")` stores four values:
 
 | Key | Meaning |
 | --- | --- |
 | `colorScheme` | `"light"` or `"dark"`. Missing means light. |
 | `backspaceEnabled` | Whether Backspace deletes. Missing means on. |
 | `soundEnabled` | Whether typing makes a soft click. Missing means on. |
+| `notesDirectory` | Folder notes are saved in. Missing means `~/freewrite_notes`. |
 
 For the two switches, stored booleans and the strings `0`, `false`, `no`, and `off` count as off.
 
-Notes themselves are not in settings. They are files, described in [Architecture](architecture.md).
+Notes themselves are not in settings. They are files in `notesDirectory`, described in [Architecture](architecture.md). Changing the folder from History can move those files. The setting is updated only after that choice is finished.

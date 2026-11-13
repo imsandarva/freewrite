@@ -17,7 +17,7 @@ MAINTAINER = "Sandarva Paudel <sandarvapoudel182@gmail.com>"
 SIZES = (16, 24, 32, 48, 64, 128, 256, 512)
 MODULES = (
     "main.py", "freewriteApp.py", "ContentView.py", "editing.py", "typeface.py",
-    "clock.py", "switch.py", "sound.py", "notes.py", "history.py", "paths.py",
+    "clock.py", "switch.py", "sound.py", "notes.py", "history.py", "place.py", "choice.py", "paths.py",
 )
 ASSETS = ("style.qss", "default.md", "pencil_icon.png", "app-icon.png")
 
