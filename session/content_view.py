@@ -1,6 +1,6 @@
 """The writing session: the page, the bar, and the sheet over it."""
 
-from PyQt5.QtCore import Qt, QSettings, QTimer
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QTextOption
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
@@ -19,6 +19,7 @@ from session.prompts import AI_CHAT_PROMPT, CLAUDE_PROMPT, FONT_SIZES, PLACEHOLD
 from session.text_direction import TextDirection
 from session.theme import ThemeControl
 from session.timer_control import TimerControl
+from papers.catalog import saved_paper
 from sound.key_clicks import KeyClicks
 from sound.settings import saved_sound_on
 
@@ -48,11 +49,11 @@ class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, Fullsc
         self._history_open = False
         self.hovered_trash_id = None
         self.hovered_export_id = None
-        self.color_scheme = QSettings("humansongs", "freewrite").value("colorScheme", "light")
+        self.paper = saved_paper()
+        self.color_scheme = self.paper.key
         self.backspace_enabled = saved_backspace_on()
         self.sound_enabled = saved_sound_on()
         self.key_sound = KeyClicks(self.sound_enabled)
-        self.is_hovering_theme_toggle = False
         self.did_copy_prompt = False
         self.placeholder_text = ""
         self.font_sizes = list(FONT_SIZES)
@@ -81,19 +82,16 @@ class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, Fullsc
         option.setWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
         option.setTextDirection(Qt.LeftToRight)
         document.setDefaultTextOption(option)
-        # Set property for theme
-        is_dark = self.color_scheme == "dark"
-        if hasattr(self, 'parent') and self.parent() is not None:
-            self.parent().setProperty("dark", is_dark)
-        self.text_edit.setProperty("dark", is_dark)
         self.text_edit.textChanged.connect(self.on_text_changed)
         self.fix_text_direction()
         self.main_v_layout.addWidget(self.text_edit)
         self.main_v_layout.setSpacing(0)
-        self._compose_bar(is_dark)
+        self._compose_bar(self.paper)
         self.main_v_layout.addWidget(self.bottom_nav)
         # History floats over the page, so the writing does not reflow when it opens.
-        self._wire_history(is_dark)
+        self._wire_history(self.paper)
+        self._wire_fullscreen()
+        self.update_styles()
 
         # Timer
         self.timer = QTimer()

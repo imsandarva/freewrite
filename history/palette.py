@@ -1,24 +1,32 @@
-"""Warm paper in the light, warm charcoal in the dark."""
+"""Sheet colors taken from the writing paper, so History is the same stock as the page."""
 
 from PyQt5.QtGui import QColor
 
+from papers.catalog import paper_for
 
-def colors(dark):
-    """Warm paper in the light, warm charcoal in the dark. The clay accent matches the rest of the app."""
-    if dark:
-        return {
-            "sheet": QColor("#161412"), "scrim": QColor(0, 0, 0), "scrim_alpha": 64,
-            "title": QColor("#F7F4EF"), "muted": QColor("#A39B92"), "body": QColor("#E8E2D8"),
-            "line": QColor(255, 255, 255, 28), "hover": QColor(255, 248, 240, 16),
-            "selected": QColor(196, 164, 132, 40), "accent": QColor("#D4B496"),
-            "icon": QColor("#B7AFA6"), "icon_hot": QColor("#F3E6D6"), "danger": QColor("#E7B1A6"),
-            "icon_bg": QColor(255, 255, 255, 20), "shadow": 96,
-        }
+
+def _tint(hex_color, alpha):
+    color = QColor(hex_color)
+    color.setAlpha(int(alpha))
+    return color
+
+
+def colors(paper=None):
+    """One palette for the sheet. A bare true/false still resolves, for the moment before a paper arrives."""
+    if paper is True: paper = paper_for("black")
+    elif not hasattr(paper, "page"): paper = paper_for("white")
+    dark = paper.dark
     return {
-        "sheet": QColor("#FBF9F6"), "scrim": QColor(42, 32, 22), "scrim_alpha": 22,
-        "title": QColor("#1C1917"), "muted": QColor("#8A8178"), "body": QColor("#2A2622"),
-        "line": QColor(48, 38, 28, 32), "hover": QColor(48, 36, 24, 14),
-        "selected": QColor(140, 104, 66, 28), "accent": QColor("#8C6842"),
-        "icon": QColor("#8A8178"), "icon_hot": QColor("#3E342C"), "danger": QColor("#9C463C"),
-        "icon_bg": QColor(48, 36, 24, 16), "shadow": 48,
+        "sheet": QColor(paper.sheet),
+        "scrim": QColor(0, 0, 0) if dark else QColor(42, 32, 22),
+        "scrim_alpha": 78 if dark else 26,
+        "title": QColor(paper.hover if dark else paper.ink),
+        "muted": QColor(paper.muted), "body": QColor(paper.ink),
+        "line": _tint("#FFFFFF" if dark else paper.ink, 32 if dark else 28),
+        "hover": _tint("#FFFFFF" if dark else paper.ink, 16 if dark else 14),
+        "selected": _tint(paper.accent, 46 if dark else 36),
+        "accent": QColor(paper.accent),
+        "icon": QColor(paper.muted), "icon_hot": QColor(paper.hover), "danger": QColor(paper.danger),
+        "icon_bg": _tint("#FFFFFF" if dark else paper.ink, 22 if dark else 16),
+        "shadow": 96 if dark else 42,
     }

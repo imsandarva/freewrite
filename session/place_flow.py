@@ -40,13 +40,12 @@ class PlaceFlow:
         self._use_directory(chosen, keep)
 
     def _ask_and_maybe_move(self, chosen):
-        dark = self.color_scheme == "dark"
-        choice = ask_move(self, os.path.abspath(chosen), dark, note_count(self.documents_directory), has_notes(chosen))
+        choice = ask_move(self, os.path.abspath(chosen), self.paper, note_count(self.documents_directory), has_notes(chosen))
         if choice != "move": return choice
         try:
             changed = relocate(self.documents_directory, chosen)
         except PlaceError as error:
-            tell(self, error.title, error.body, dark)
+            tell(self, error.title, error.body, self.paper)
             return "cancel"
         current = str(self.selected_entry_id) if self.selected_entry_id else ""
         return changed.get(current, self.selected_entry_id)
@@ -63,7 +62,7 @@ class PlaceFlow:
         except Exception as error:
             self.selected_entry_id = previous
             print("Error opening notes folder: %s" % error)
-            tell(self, "That folder isn't available", "Your notes are still being saved in the previous place.", self.color_scheme == "dark")
+            tell(self, "That folder isn't available", "Your notes are still being saved in the previous place.", self.paper)
             return
         remember_directory(path)
         self.documents_directory = path

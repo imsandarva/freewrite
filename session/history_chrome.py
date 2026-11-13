@@ -8,9 +8,9 @@ from history.drawer import HistoryDrawer
 
 
 class HistoryChrome:
-    def _wire_history(self, is_dark):
+    def _wire_history(self, paper):
         self.history = HistoryDrawer(self)
-        self.history.set_dark(bool(is_dark))
+        self.history.apply_paper(paper)
         self.history.chosen.connect(self.select_entry)
         self.history.delete_requested.connect(self.delete_entry)
         self.history.export_requested.connect(self.export_entry_as_pdf)
@@ -26,10 +26,14 @@ class HistoryChrome:
     def _history_shown(self):
         self._history_escape.setEnabled(True)
         self._set_history_open(True)
+        self._sync_fullscreen_keys()
+        hint = getattr(self, "_exit_hint", None)
+        if hint is not None and hint.isVisible(): hint.raise_()
 
     def _history_hidden(self):
         self._history_escape.setEnabled(False)
         self._set_history_open(False)
+        self._sync_fullscreen_keys()
         self.text_edit.setFocus()
 
     def _set_history_open(self, is_open):
@@ -40,7 +44,7 @@ class HistoryChrome:
         if not self._history_open:
             self.history_btn.setStyleSheet("")
             return
-        color = "#F4F1EC" if self.color_scheme == "dark" else "#1C1917"
+        color = self.paper.hover if self.paper.dark else self.paper.ink
         self.history_btn.setStyleSheet("QPushButton { color: %s; }" % color)
 
     def showEvent(self, event):
@@ -50,6 +54,8 @@ class HistoryChrome:
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.history.fit_over(self.bottom_nav)
+        hint = getattr(self, "_exit_hint", None)
+        if hint is not None: hint.place()
     def update_entries_display(self):
         self.history.set_entries(self.entries, self.selected_entry_id)
     def toggle_history(self):

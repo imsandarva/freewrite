@@ -4,9 +4,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QPushButton
 
 
-def text_button(label, dark):
+def text_button(label):
     button = QPushButton(label)
-    button.setProperty("dark", bool(dark))
     button.setCursor(Qt.PointingHandCursor)
     button.setFocusPolicy(Qt.TabFocus)
     return button

@@ -1,10 +1,9 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QEvent
 from typeface.lato import load_lato
 from app.paths import app_icon
 from session.content_view import ContentView
-from utils.qsettings_identity import APP, ORG
 
 
 class FreewriteApp(QMainWindow):
@@ -13,14 +12,6 @@ class FreewriteApp(QMainWindow):
         self.setWindowTitle("Freewrite")
         self.setGeometry(100, 100, 1100, 600)
         self.setWindowIcon(QIcon(app_icon()))
-
-        # Load color scheme from settings
-        settings = QSettings(ORG, APP)
-        self.color_scheme = settings.value("colorScheme", "light")
-        
-        # Set the dark property based on current scheme
-        self.setProperty("dark", self.color_scheme == "dark")
-
         load_lato()
 
         # Set central widget
@@ -29,6 +20,11 @@ class FreewriteApp(QMainWindow):
 
         # Center window
         self.center()
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if event.type() != QEvent.WindowStateChange or not hasattr(self, "content_view"): return
+        self.content_view.apply_fullscreen(self.isFullScreen())
 
     def center(self):
         frame = self.frameGeometry()

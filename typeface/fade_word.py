@@ -8,15 +8,14 @@ from typeface.blend import _mix
 from typeface.constants import _CHROME, _HEIGHT
 from typeface.metrics import _advance
 from typeface.specimen import specimen
-from typeface.theme import _note_dark
 
 
 class _FadeWord(QWidget):
     """One word that crossfades upward into the next word."""
 
-    def __init__(self, name, dark=False, parent=None):
+    def __init__(self, name, paper, parent=None):
         super().__init__(parent)
-        self._dark = bool(dark)
+        self._paper = paper
         self._text, self._prev = "", ""
         self._font = self._prev_font = specimen("Lato", _CHROME)
         self._blend, self._warm = 1.0, 0.0
@@ -28,12 +27,15 @@ class _FadeWord(QWidget):
         self._warm_anim.setDuration(150)
         self._warm_anim.setEasingCurve(QEasingCurve.OutCubic)
         self.setObjectName(name)
-        self.setProperty("dark", self._dark)
         self.setCursor(Qt.PointingHandCursor)
         self.setFocusPolicy(Qt.TabFocus)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setFixedHeight(_HEIGHT)
         self.setStyleSheet("QWidget#%s { background: transparent; border: none; }" % name)
+
+    def apply_paper(self, paper):
+        self._paper = paper
+        self.update()
 
     def was_pointer(self):
         """True when the last step came from the pointer, so the page can take the caret back."""
@@ -121,15 +123,14 @@ class _FadeWord(QWidget):
         self._move_warm(0.0)
         super().leaveEvent(event)
 
-    def event(self, event):
-        _note_dark(self, event)
-        return super().event(event)
+    def _align(self):
+        return Qt.AlignLeft | Qt.AlignVCenter
 
     def _rest_ink(self):
-        return QColor("#F4F1EC") if self._dark else QColor("#1C1917")
+        return QColor(self._paper.muted)
 
     def _hot_ink(self):
-        return QColor("#FFFFFF") if self._dark else QColor("#1C1917")
+        return QColor(self._paper.hover)
 
     def _ink(self):
         return _mix(self._rest_ink(), self._hot_ink(), self._warm)
@@ -158,7 +159,7 @@ class _FadeWord(QWidget):
         painter.setOpacity(opacity * (0.72 if self._down else 1))
         painter.setFont(font)
         painter.setPen(self._ink())
-        painter.drawText(QRectF(2, dy, self.width() - 4, self.height()), Qt.AlignLeft | Qt.AlignVCenter, text)
+        painter.drawText(QRectF(2, dy, self.width() - 4, self.height()), self._align(), text)
         painter.restore()
 
     def _paint_mark(self, _painter):
@@ -166,7 +167,7 @@ class _FadeWord(QWidget):
 
     def _paint_focus(self, painter):
         if not self.hasFocus(): return
-        color = QColor("#D4B496") if self._dark else QColor("#B08968")
+        color = QColor(self._paper.accent)
         painter.setPen(QPen(color, 1))
         painter.setBrush(Qt.NoBrush)
         painter.drawRoundedRect(QRectF(0.5, 3.5, self.width() - 1, self.height() - 7), 8, 8)

@@ -1,6 +1,6 @@
 # Workflows
 
-The bottom bar is the whole interface. On the left: font size, one face control (it opens on Lato), Backspace, Sound, and a 15:00 timer. On the right: Chat, Fullscreen, New Entry, Toggle Theme, and History.
+The bottom bar is the whole interface. On the left: font size, one face control (it opens on Lato), Backspace, Sound, and a 15:00 timer. On the right: Chat, Fullscreen(F11), New Entry, the paper name (it opens on White), and History.
 
 Backspace and Sound are pills, with no On or Off written on them. The knob on the left, on a neutral track, is off. The knob on the right, on the warm fill, is on. Sound, when on, makes a quiet click as you type. When it is off, the keys are silent. Backspace, when off, neither erases nor clicks.
 
@@ -44,6 +44,8 @@ ChatGPT uses `https://chat.openai.com/?m=`. Claude uses `https://claude.ai/new?q
 
 The timer is a one-second `QTimer` that is always running. The clock starts a 900-second countdown and shows `MM:SS` in fixed cells, so the digits do not shift. Pressing it again resets to `15:00`. At zero the countdown stops and the mark fades; the next press starts a fresh fifteen minutes. The bar does not hide.
 
-Font size cycles 16, 18, 20, 22, 24, 26. The face control cycles Lato, Arial, System, and Serif. Arial resolves to Arial or Liberation Sans. System is the desktop interface face. Serif resolves to the first installed book face, preferring Gentium Book Basic. The label is drawn in that face and crossfades on each click. Size and face apply to the words already on the page. They are not written to settings.
+Font size cycles 16, 18, 20, 22, 24, 26. The face control cycles Lato, Arial, System, and Serif. Arial resolves to Arial or Liberation Sans. System is the desktop interface face. Serif resolves to the first installed book face, preferring Gentium Book Basic. The label is drawn in that face and crossfades on each click, with no line under the word. Size and face apply to the words already on the page. They are not written to settings.
 
-Toggle Theme flips `colorScheme`, sets `dark` on the window and the bar widgets, reloads `assets/style.qss`, and tells the history sheet which palette to paint. Fullscreen asks the main window for `showFullScreen` / `showNormal`. The button label switches between Fullscreen and Minimize.
+The paper name cycles White, Warm White, Sepia, Charcoal, and Black. The first launch is White. Each press steps once and is remembered. The page, the bar, History, and the folder prompt all follow that paper.
+
+Fullscreen(F11), and the F11 key, ask the window to fill the screen. The bar hides with it. A small note at the bottom reads “Press esc to exit fullscreen” and leaves after two seconds. Escape leaves fullscreen. While History is open, Escape closes the sheet first and the next Escape leaves fullscreen. F11 does not leave.

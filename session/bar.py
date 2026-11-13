@@ -1,10 +1,13 @@
 """The bottom bar: size, face, the pills, the clock, and the session buttons."""
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QHBoxLayout, QWidget
 
 from clock.quiet_clock import QuietClock
 from editing.backspace_pref import remember_backspace
+from papers.catalog import paper_for
+from papers.cycle import PaperCycle
+from session.fullscreen import ENTER_LABEL
 from sound.settings import remember_sound
 from switch.quiet_switch import QuietSwitch
 from typeface.apply_face import apply_face
@@ -15,35 +18,34 @@ from typeface.type_cycle import TypeCycle
 
 
 class BarControls:
-    def _compose_bar(self, is_dark):
-        """Type on the left, then the session tools. Everything else stays on the right."""
+    def _compose_bar(self, paper):
+        """Type on the left, then the session tools. The paper name sits with the actions."""
         self.bottom_nav = QWidget()
         self.bottom_nav.setObjectName("bottomNav")
-        self.bottom_nav.setProperty("dark", is_dark)
         self.bottom_nav_layout = QHBoxLayout(self.bottom_nav)
         self.bottom_nav_layout.setContentsMargins(18, 2, 12, 6)
         self.bottom_nav_layout.setSpacing(0)
-        self.size_cycle = SizeCycle(self.font_sizes, self.font_size, is_dark)
+        self.size_cycle = SizeCycle(self.font_sizes, self.font_size, paper)
         self.size_cycle.chosen.connect(self.use_size)
-        self.type_cycle = TypeCycle(is_dark)
+        self.type_cycle = TypeCycle(paper)
         self.type_cycle.chosen.connect(self.use_typeface)
         self.selected_font = self.type_cycle.family()
-        self.bar_rule = BarRule(is_dark)
-        self.backspace_switch = QuietSwitch("Backspace", self.backspace_enabled, is_dark)
+        self.bar_rule = BarRule(paper)
+        self.backspace_switch = QuietSwitch("Backspace", self.backspace_enabled, paper)
         self.backspace_switch.toggled.connect(self.on_backspace_toggled)
-        self.sound_switch = QuietSwitch("Sound", self.sound_enabled, is_dark)
+        self.sound_switch = QuietSwitch("Sound", self.sound_enabled, paper)
         self.sound_switch.toggled.connect(self.on_sound_toggled)
-        self.clock = QuietClock(is_dark)
+        self.clock = QuietClock(paper)
         self.clock.clicked.connect(self.toggle_timer)
-        self.chat_btn = text_button("Chat", is_dark)
+        self.chat_btn = text_button("Chat")
         self.chat_btn.clicked.connect(self.show_chat_menu)
-        self.fullscreen_btn = text_button("Fullscreen", is_dark)
-        self.fullscreen_btn.clicked.connect(self.toggle_fullscreen)
-        self.new_entry_btn = text_button("New Entry", is_dark)
+        self.fullscreen_btn = text_button(ENTER_LABEL)
+        self.fullscreen_btn.clicked.connect(self.enter_fullscreen)
+        self.new_entry_btn = text_button("New Entry")
         self.new_entry_btn.clicked.connect(self.create_new_entry)
-        self.theme_toggle_btn = text_button("Toggle Theme", is_dark)
-        self.theme_toggle_btn.clicked.connect(self.toggle_theme)
-        self.history_btn = text_button("History", is_dark)
+        self.paper_cycle = PaperCycle(paper)
+        self.paper_cycle.chosen.connect(self.use_paper)
+        self.history_btn = text_button("History")
         self.history_btn.clicked.connect(self.toggle_history)
         for widget, gap in (
             (self.size_cycle, 2), (self.type_cycle, 16), (self.bar_rule, 16),
@@ -51,7 +53,7 @@ class BarControls:
         ):
             self._add_bar(widget, gap)
         self.bottom_nav_layout.addStretch(1)
-        for button in (self.chat_btn, self.fullscreen_btn, self.new_entry_btn, self.theme_toggle_btn, self.history_btn):
+        for button in (self.chat_btn, self.fullscreen_btn, self.new_entry_btn, self.paper_cycle, self.history_btn):
             self._add_bar(button, 0)
 
     def _add_bar(self, widget, gap):
@@ -78,6 +80,10 @@ class BarControls:
         self.selected_font = family
         self._apply_writing_font()
         self._return_to_page(self.type_cycle)
+
+    def use_paper(self, key):
+        self._apply_paper(paper_for(key))
+        self._return_to_page(self.paper_cycle)
 
     def _apply_writing_font(self):
         apply_face(self.text_edit, self.selected_font, self.font_size)

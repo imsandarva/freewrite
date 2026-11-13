@@ -38,16 +38,19 @@ class HistoryDrawer(QWidget):
         self.hide()
 
     def fit_over(self, bar):
-        """Dock to the top and right of the window, and stop at the bar along the bottom."""
+        """Dock to the top and right, and stop at the bar. A hidden bar means the sheet uses the whole window."""
         self._host = bar
         parent = self.parentWidget()
-        if bar is None or parent is None: return
-        bottom = bar.mapTo(parent, QPoint(0, 0)).y()
-        self.setGeometry(0, 0, parent.width(), max(0, bottom))
+        if parent is None: return
+        if bar is None or not bar.isVisible():
+            self.setGeometry(0, 0, parent.width(), parent.height())
+        else:
+            bottom = bar.mapTo(parent, QPoint(0, 0)).y()
+            self.setGeometry(0, 0, parent.width(), max(0, bottom))
         if self.isVisible(): self.raise_()
 
-    def set_dark(self, dark):
-        self._colors = colors(bool(dark))
+    def apply_paper(self, paper):
+        self._colors = colors(paper)
         self.sheet.apply_colors(self._colors)
         self.update()
 

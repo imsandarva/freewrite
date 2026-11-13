@@ -1,6 +1,6 @@
 """A small on/off pill shared by Backspace and Sound."""
 
-from PyQt5.QtCore import QEasingCurve, QEvent, QPropertyAnimation, QRectF, QSize, Qt, pyqtProperty, pyqtSignal
+from PyQt5.QtCore import QEasingCurve, QPropertyAnimation, QRectF, QSize, Qt, pyqtProperty, pyqtSignal
 from PyQt5.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
 from PyQt5.QtWidgets import QSizePolicy, QWidget
 
@@ -27,26 +27,26 @@ def _width(metrics, text):
     return metrics.horizontalAdvance(text) if hasattr(metrics, "horizontalAdvance") else metrics.width(text)
 
 
-def _palette(dark, hover):
+def _palette(paper, hover):
     """Neutral when off, clay when on. The old pill used the clay for off, so it read backwards."""
-    if dark:
-        return {"label": QColor("#F4F0EA" if hover else "#9C958C"), "off": QColor("#3A3531"), "on": QColor("#D4B496"), "knob": QColor("#F7F3EE"), "shadow": 90}
-    return {"label": QColor("#1C1917" if hover else "#808080"), "off": QColor("#E4DFD8"), "on": QColor("#B08968"), "knob": QColor("#FFFCF8"), "shadow": 46}
+    return {
+        "label": QColor(paper.hover if hover else paper.muted), "off": QColor(paper.track), "on": QColor(paper.accent),
+        "knob": QColor(paper.knob), "shadow": 90 if paper.dark else 46, "edge": 60 if paper.dark else 32,
+    }
 
 
 class QuietSwitch(QWidget):
     toggled = pyqtSignal(bool)
 
-    def __init__(self, label, on=True, dark=False, parent=None):
+    def __init__(self, label, on=True, paper=None, parent=None):
         super().__init__(parent)
-        self._label, self._on, self._dark = label, bool(on), bool(dark)
+        self._label, self._on, self._paper = label, bool(on), paper
         self._hover = self._pointer = self._down = False
         self._knob = 1.0 if self._on else 0.0
         self._slide = QPropertyAnimation(self, b"knob", self)
         self._slide.setDuration(200)
         self._slide.setEasingCurve(QEasingCurve.OutCubic)
         self.setObjectName("quietSwitch")
-        self.setProperty("dark", self._dark)
         self.setCursor(Qt.PointingHandCursor)
         self.setFocusPolicy(Qt.TabFocus)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -57,6 +57,10 @@ class QuietSwitch(QWidget):
     def sizeHint(self):
         text = _width(QFontMetrics(self._font()), self._label)
         return QSize(int(2 + text + 8 + _TRACK_W + _RIGHT), 32)
+
+    def apply_paper(self, paper):
+        self._paper = paper
+        self.update()
 
     def was_pointer(self):
         """True when the last flip came from the pointer, so the page can take the caret back."""
@@ -111,12 +115,6 @@ class QuietSwitch(QWidget):
         self.update()
         super().leaveEvent(event)
 
-    def event(self, event):
-        if event.type() == QEvent.DynamicPropertyChange and bytes(event.propertyName()) == b"dark":
-            self._dark = self.property("dark") is True
-            self.update()
-        return super().event(event)
-
     def _knob_pos(self):
         return self._knob
 
@@ -137,7 +135,7 @@ class QuietSwitch(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.TextAntialiasing)
-        colors = _palette(self._dark, self._hover)
+        colors = _palette(self._paper, self._hover)
         self._paint_label(painter, colors)
         track = self._track_rect()
         self._paint_track(painter, track, colors)
@@ -170,7 +168,7 @@ class QuietSwitch(QWidget):
         painter.setPen(Qt.NoPen)
         painter.setBrush(shadow)
         painter.drawEllipse(QRectF(x, y + 0.8, side, side))
-        painter.setPen(QPen(QColor(90, 70, 50, 32 if not self._dark else 60), 1))
+        painter.setPen(QPen(QColor(90, 70, 50, colors["edge"]), 1))
         painter.setBrush(colors["knob"])
         painter.drawEllipse(QRectF(x, y, side, side))
 

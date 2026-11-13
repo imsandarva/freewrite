@@ -15,15 +15,15 @@ _GUARD_S = 0.22
 
 
 class _Prompt(QDialog):
-    def __init__(self, parent, dark, title, body, path, actions, cancel):
+    def __init__(self, parent, paper, title, body, path, actions, cancel):
         super().__init__(parent)
         ensure_lato()
-        self._dark = bool(dark)
+        self._paper = paper
         self._can_cancel = cancel
         self.choice = "cancel" if cancel else "okay"
         self._lift = 10.0
         self._guard_until = 0.0
-        self._colors = colors(self._dark)
+        self._colors = colors(paper)
         self.card = _Card(self._colors, title, body, path, actions, cancel, self._finish)
         self.card.setParent(self)
         self._anim = QVariantAnimation(self)
@@ -38,9 +38,9 @@ class _Prompt(QDialog):
         self.setStyleSheet("QDialog { background: transparent; }")
 
     @staticmethod
-    def open(parent, dark, title, body, path, actions, cancel):
+    def open(parent, paper, title, body, path, actions, cancel):
         host = parent.window() if parent is not None else None
-        dialog = _Prompt(host, dark, title, body, path, actions, cancel)
+        dialog = _Prompt(host, paper, title, body, path, actions, cancel)
         if host is not None:
             origin = host.mapToGlobal(QPoint(0, 0))
             dialog.setGeometry(origin.x(), origin.y(), max(host.width(), 420), max(host.height(), 320))
@@ -67,7 +67,7 @@ class _Prompt(QDialog):
     def paintEvent(self, _event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), QColor(0, 0, 0, 124) if self._dark else QColor(36, 28, 20, 72))
+        painter.fillRect(self.rect(), QColor(0, 0, 0, 140) if self._paper.dark else QColor(36, 28, 20, 72))
         self._paint_shadow(painter)
 
     def mousePressEvent(self, event):

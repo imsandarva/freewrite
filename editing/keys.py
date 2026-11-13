@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 _COMMAND = Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier
 _SILENT = frozenset({
     Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_Meta, Qt.Key_AltGr,
-    Qt.Key_CapsLock, Qt.Key_NumLock, Qt.Key_ScrollLock, Qt.Key_Escape, Qt.Key_Tab,
+    Qt.Key_CapsLock, Qt.Key_NumLock, Qt.Key_ScrollLock, Qt.Key_Escape, Qt.Key_F11, Qt.Key_Tab,
     Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down, Qt.Key_Home, Qt.Key_End,
     Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Insert, Qt.Key_Menu, Qt.Key_Print, Qt.Key_Pause,
     Qt.Key_Super_L, Qt.Key_Super_R, Qt.Key_Hyper_L, Qt.Key_Hyper_R,

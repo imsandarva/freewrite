@@ -8,15 +8,14 @@ from typeface.blend import _mix
 from typeface.lato import load_lato
 from typeface.metrics import _advance
 from typeface.specimen import specimen
-from typeface.theme import _note_dark
 
 class QuietClock(QWidget):
     clicked = pyqtSignal()
 
-    def __init__(self, dark=False, parent=None):
+    def __init__(self, paper, parent=None):
         super().__init__(parent)
         load_lato()
-        self._dark = bool(dark)
+        self._paper = paper
         self._seconds, self._running = 900, False
         self._live, self._warm = 0.0, 0.0
         self._hover = self._down = self._pointer = False
@@ -28,13 +27,16 @@ class QuietClock(QWidget):
         self._warm_anim.setDuration(150)
         self._warm_anim.setEasingCurve(QEasingCurve.OutCubic)
         self.setObjectName("sessionClock")
-        self.setProperty("dark", self._dark)
         self.setCursor(Qt.PointingHandCursor)
         self.setFocusPolicy(Qt.TabFocus)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setFixedSize(*self._measure())
         self.setStyleSheet("QWidget#sessionClock { background: transparent; border: none; }")
         self._announce()
+
+    def apply_paper(self, paper):
+        self._paper = paper
+        self.update()
 
     def was_pointer(self):
         return self._pointer
@@ -117,15 +119,8 @@ class QuietClock(QWidget):
         self._move_warm(0.0)
         super().leaveEvent(event)
 
-    def event(self, event):
-        _note_dark(self, event)
-        return super().event(event)
-
     def _digit_color(self):
-        if self._dark:
-            idle, running, hot = QColor("#9C958C"), QColor("#D4B496"), QColor("#F7F4EF")
-        else:
-            idle, running, hot = QColor("#8A8178"), QColor("#8C6842"), QColor("#1C1917")
+        idle, running, hot = QColor(self._paper.muted), QColor(self._paper.accent), QColor(self._paper.hover)
         base = _mix(idle, running, self._live)
         return _mix(base, hot, self._warm * (0.35 if self._running else 1))
 
@@ -139,7 +134,7 @@ class QuietClock(QWidget):
 
     def _paint_mark(self, painter):
         if self._live <= 0.01: return
-        color = QColor("#D4B496") if self._dark else QColor("#A6845B")
+        color = QColor(self._paper.accent)
         color.setAlphaF(0.95 * self._live)
         painter.setPen(Qt.NoPen)
         painter.setBrush(color)
@@ -160,7 +155,7 @@ class QuietClock(QWidget):
 
     def _paint_focus(self, painter):
         if not self.hasFocus(): return
-        color = QColor("#D4B496") if self._dark else QColor("#B08968")
+        color = QColor(self._paper.accent)
         painter.setPen(QPen(color, 1))
         painter.setBrush(Qt.NoBrush)
         painter.drawRoundedRect(QRectF(0.5, 3.5, self.width() - 1, self.height() - 7), 8, 8)

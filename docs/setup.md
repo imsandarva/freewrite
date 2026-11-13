@@ -20,10 +20,17 @@ From the project root:
 
 ```bash
 python3 packaging/build_deb.py
-sudo apt install ./dist/freewrite_1.1.0_all.deb
 ```
 
-`apt` installs `python3-pyqt5` and `libpulse0` if they are missing. After that, Freewrite is an application: search for it by name in the menu and open it from there. The command `freewrite` also starts it. The icon is the pencil in `assets/pencil_icon.png`, with the plain gray backdrop removed so it sits cleanly in the menu.
+That writes `dist/freewrite_1.1.0_all.deb`, then asks whether to install or update Freewrite on this computer. Answer `y` to do that. You may be asked for your password. Any other answer only builds the installer.
+
+The same version is replaced on purpose, so a rebuild updates the copy already on the computer. Saying yes also installs `python3-pyqt5` and `libpulse0` if they are missing. After that, Freewrite is an application: search for it by name in the menu and open it from there. The command `freewrite` also starts it. The icon is the pencil in `assets/pencil_icon.png`, with the plain gray backdrop removed so it sits cleanly in the menu.
+
+To put the installer on later, without running the question again:
+
+```bash
+sudo dpkg -i ./dist/freewrite_1.1.0_all.deb && sudo apt-get install -f -y
+```
 
 The package puts the code in `/usr/share/freewrite`, the launcher at `/usr/bin/freewrite`, the menu entry at `/usr/share/applications/freewrite.desktop`, and the icon in the `hicolor` theme as `freewrite`. `Terminal=false` in that entry is what keeps it from opening a terminal window.
 
@@ -37,7 +44,7 @@ Edit the packages at the project root, then run the build script again. The tree
 
 | Key | Meaning |
 | --- | --- |
-| `colorScheme` | `"light"` or `"dark"`. Missing means light. |
+| `colorScheme` | `white`, `ivory`, `sepia`, `charcoal`, or `black`. Missing means white. An older `light` is white, and an older `dark` is black. |
 | `backspaceEnabled` | Whether Backspace deletes. Missing means on. |
 | `soundEnabled` | Whether typing makes a soft click. Missing means on. |
 | `notesDirectory` | Folder notes are saved in. Missing means `~/freewrite_notes`. |

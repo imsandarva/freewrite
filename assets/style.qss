@@ -5,65 +5,37 @@ QMainWindow {
     font-size: 14px;
 }
 
-QMainWindow[dark="true"] {
-    background-color: #000000;
-}
-
 /* Face and size belong to the page. A font here would replace them on the next theme reload. */
 QTextEdit {
     background-color: #ffffff;
-    color: #2A2622;
-    selection-background-color: rgba(166, 132, 91, 0.32);
-    selection-color: #2A2622;
+    color: #1A1714;
+    selection-background-color: rgba(166, 132, 91, 0.30);
+    selection-color: #1A1714;
     padding: 18px 22px 12px 22px;
     border: none;
-}
-
-QTextEdit[dark="true"] {
-    background-color: #000000;
-    color: #E7E1D8;
-    selection-background-color: rgba(212, 180, 150, 0.28);
-    selection-color: #E7E1D8;
 }
 
 QPushButton {
     background-color: transparent;
     color: #8A8178;
     border: none;
-    padding: 6px 8px;
+    padding: 6px 10px;
     font-family: Lato;
     font-size: 13px;
 }
 
 QPushButton:hover {
-    color: #1C1917;
-}
-
-QPushButton[dark="true"] {
-    color: #9C958C;
-}
-
-QPushButton:hover[dark="true"] {
-    color: #F4F1EC;
+    color: #1A1714;
 }
 
 QWidget#bottomNav {
     background-color: #ffffff;
-    border-top: 1px solid rgba(28, 25, 23, 0.08);
-}
-
-QWidget#bottomNav[dark="true"] {
-    background-color: #000000;
-    border-top: 1px solid rgba(247, 244, 239, 0.08);
+    border-top: 1px solid rgba(26, 23, 20, 0.09);
 }
 
 QWidget#sidebar {
     background-color: #ffffff;
     width: 200px;
-}
-
-QWidget#sidebar[dark="true"] {
-    background-color: #000000;
 }
 
 QScrollArea {
@@ -72,30 +44,12 @@ QScrollArea {
 }
 
 QLabel {
-    color: #808080;
+    color: #8A8178;
     font-size: 12px;
 }
 
 QLabel:hover {
-    color: #000000;
-}
-
-QLabel[dark="true"] {
-    color: #808080;
-}
-
-QLabel:hover[dark="true"] {
-    color: #ffffff;
-}
-
-/* Additional rules to ensure complete theme coverage */
-QScrollArea[dark="true"] {
-    background-color: #000000;
-}
-
-QWidget[dark="true"] {
-    background-color: #000000;
-    color: #e6e6e6;
+    color: #1A1714;
 }
 
 /* Fix for text direction */
@@ -103,39 +57,23 @@ QTextEdit::document {
     text-direction: ltr;
 }
 
-/* Dark theme styles for entry items */
-#entriesContainer[dark="true"], #entriesScroll[dark="true"] {
-    background-color: #121212;
-    border: none;
-}
-
-#entryItem[dark="true"] {
-    background-color: #121212;
-    color: white;
-    border: none;
-    margin: 0;
-    padding: 0;
-}
-
-QScrollArea[dark="true"], QScrollArea[dark="true"] > QWidget, 
-QScrollArea[dark="true"] > QWidget > QWidget {
-    background-color: #121212;
-    border: none;
-}
-
-/* Style for scrollbars in dark mode */
-QScrollBar:vertical[dark="true"] {
-    background: #1e1e1e;
+QScrollBar:vertical {
+    background: transparent;
     width: 10px;
 }
 
-QScrollBar::handle:vertical[dark="true"] {
-    background: #444;
-    min-height: 20px;
+QScrollBar::handle:vertical {
+    background: rgba(166, 132, 91, 0.42);
+    min-height: 28px;
     border-radius: 5px;
 }
 
-QScrollBar::add-line:vertical[dark="true"], 
-QScrollBar::sub-line:vertical[dark="true"] {
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
     height: 0px;
+}
+
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: none;
 }
