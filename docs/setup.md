@@ -27,9 +27,9 @@ sudo apt install ./dist/freewrite_1.1.0_all.deb
 
 The package puts the code in `/usr/share/freewrite`, the launcher at `/usr/bin/freewrite`, the menu entry at `/usr/share/applications/freewrite.desktop`, and the icon in the `hicolor` theme as `freewrite`. `Terminal=false` in that entry is what keeps it from opening a terminal window.
 
-`main.py` is the installed entry. It sets the locale to English (United States) so the writing surface stays left to right, and it names the window `freewrite` so the desktop can match it to that menu entry. Styles, the welcome note, and the icon are read from beside the code (`paths.py`), so a menu launch finds them no matter which folder the session started in. Theme changes reload that same stylesheet.
+`main.py` is the installed entry. It sets the locale to English (United States) so the writing surface stays left to right, and it names the window `freewrite` so the desktop can match it to that menu entry. Styles, the welcome note, and the icon are read from beside the packages (`app/paths.py`), so a menu launch finds them no matter which folder the session started in. Theme changes reload that same stylesheet.
 
-Edit the modules at the project root, then run the build script again. The tree under `freewrite-package/` is an older packaging sketch and is not what `build_deb.py` ships.
+Edit the packages at the project root, then run the build script again. The tree under `freewrite-package/` is an older packaging sketch and is not what `build_deb.py` ships.
 
 ## Settings
 

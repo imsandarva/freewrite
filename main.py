@@ -1,8 +1,8 @@
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QLocale
-from paths import prepare_app
-from freewriteApp import FreewriteApp
+from app.paths import prepare_app
+from app.window import FreewriteApp
 
 
 def main():

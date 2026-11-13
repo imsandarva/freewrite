@@ -3,21 +3,25 @@
 `FreewriteApp` is a `QMainWindow` (1100×600, centered on the screen under the cursor). Its only content widget is `ContentView`, which owns the editor, the bottom bar, and a history sheet drawn on top of the page.
 
 ```text
-main.py / freewriteApp.py     window, stylesheet, locale, Lato
-        paths.py              files beside the app, and the desktop name
-        ContentView.py        session: editor, bar, save loop, chat, PDF
-            editing.py        the editor, and which keys count as typing
-            typeface.py       the one face control, the size control, applying a face
-            clock.py          the 15:00 countdown
-            switch.py         the pill used for Backspace and Sound
-            sound.py          key clicks
-            notes.py          names, catalog, atomic writes
-            place.py          which folder notes use, and moving them
-            history.py        sheet that slides over the writing
-            choice.py         the prompt that asks whether old notes come along
-        assets/               style.qss, default.md
-        fonts/                Lato (OFL)
+main.py                       installed entry: locale, then the window
+freewriteApp.py               source entry
+app/                          the window, and where assets and fonts are found
+utils/                        the settings identity, and how an on/off value is read
+session/                      the page: bar, timer, theme, notes, chat, PDF, folder
+editing/                      the editor, and which keys count as typing
+typeface/                     the face, the size, applying a face
+clock/                        the 15:00 countdown
+switch/                       the pill used for Backspace and Sound
+sound/                        key clicks
+notes/                        names, catalog, atomic writes
+place/                        which folder notes use, and moving them
+history/                      sheet that slides over the writing
+choice/                       the prompt that asks whether old notes come along
+assets/                       style.qss, default.md
+fonts/                        Lato (OFL)
 ```
+
+`main.py` and `freewriteApp.py` only wire those packages together. Each package's `__init__.py` re-exports the names other code asks for. The folder that contains the packages is where `assets/` and `fonts/` live, both in the source tree and under `/usr/share/freewrite`.
 
 The stylesheet in `assets/style.qss` keys off a `dark` property on the window, the editor, the bar, and the buttons. It does not set a font on the editor. History, the pills, the face control, the size control, and the clock paint themselves. A widget palette would be wiped the next time the stylesheet is applied, so those surfaces keep their own colors.
 
@@ -33,7 +37,7 @@ The clock reads 15:00 until it is started. Digits sit in fixed cells. While it r
 
 ## A note on disk
 
-`NoteLibrary` in `notes.py` owns one folder. That folder starts as `~/freewrite_notes` and can be changed from the bottom of History. The choice is remembered as `notesDirectory`. Each note is one `.md` file plus a row in a hidden `.entries.json` catalog:
+`NoteLibrary` in `notes/library.py` owns one folder. That folder starts as `~/freewrite_notes` and can be changed from the bottom of History. The choice is remembered as `notesDirectory`. Each note is one `.md` file plus a row in a hidden `.entries.json` catalog:
 
 ```json
 { "entries": [ { "id": "<uuid>", "created": "<iso seconds>", "filename": "the morning was slow.md" } ] }

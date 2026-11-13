@@ -15,9 +15,10 @@ VERSION = "1.1.0"
 STAMP = "Thu, 12 Nov 2026 16:30:00 +0545"
 MAINTAINER = "Sandarva Paudel <sandarvapoudel182@gmail.com>"
 SIZES = (16, 24, 32, 48, 64, 128, 256, 512)
-MODULES = (
-    "main.py", "freewriteApp.py", "ContentView.py", "editing.py", "typeface.py",
-    "clock.py", "switch.py", "sound.py", "notes.py", "history.py", "place.py", "choice.py", "paths.py",
+ENTRIES = ("main.py", "freewriteApp.py")
+PACKAGES = (
+    "app", "utils", "session", "editing", "typeface", "clock", "switch",
+    "sound", "notes", "history", "place", "choice",
 )
 ASSETS = ("style.qss", "default.md", "pencil_icon.png", "app-icon.png")
 
@@ -128,11 +129,23 @@ def _icons(stage, master):
     master.resize((256, 256), Image.Resampling.LANCZOS).save(pixmap, "PNG")
 
 
+def _copy_package(name, program):
+    source = os.path.join(ROOT, name)
+    for dirpath, dirnames, filenames in os.walk(source):
+        dirnames[:] = [item for item in dirnames if item != "__pycache__"]
+        for filename in filenames:
+            if not filename.endswith(".py"): continue
+            full = os.path.join(dirpath, filename)
+            _copy(full, os.path.join(program, os.path.relpath(full, ROOT)))
+
+
 def _stage(stage, master):
     if os.path.isdir(stage): shutil.rmtree(stage)
     program = os.path.join(stage, "usr", "share", "freewrite")
-    for name in MODULES:
+    for name in ENTRIES:
         _copy(os.path.join(ROOT, name), os.path.join(program, name))
+    for name in PACKAGES:
+        _copy_package(name, program)
     for name in ASSETS:
         _copy(os.path.join(ROOT, "assets", name), os.path.join(program, "assets", name))
     font_dir = os.path.join(ROOT, "fonts")

@@ -2,7 +2,8 @@ import unittest
 import os
 import sys
 from PyQt5.QtWidgets import QApplication  #Use PyQt5
-from ContentView import HumanEntry, ContentView
+from notes.entry import HumanEntry
+from session.content_view import ContentView
 
 class FreewriteTests(unittest.TestCase):
     @classmethod
