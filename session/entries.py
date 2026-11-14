@@ -1,4 +1,4 @@
-"""Open, save, and delete the note on the page."""
+"""Open, save, and move the note on the page into Trash."""
 
 import os
 import random  # Added for random placeholder selection
@@ -84,18 +84,16 @@ class EntryStore:
         except Exception as e:
             print(f"Error updating preview: {e}")
     def delete_entry(self, entry):
-        try:
-            self.library.delete(entry)
-            self.entries = [e for e in self.entries if e.id != entry.id]
-            if self.selected_entry_id == entry.id:
-                if self.entries:
-                    self.selected_entry_id = self.entries[0].id
-                    self.load_entry(self.entries[0])
-                else:
-                    self.create_new_entry()
-            self.update_entries_display()
-        except Exception as e:
-            print(f"Error deleting entry: {e}")
+        if not self._move_entry_to_trash(entry): return
+        self.entries = [e for e in self.entries if e.id != entry.id]
+        if self.selected_entry_id == entry.id:
+            if self.entries:
+                self.selected_entry_id = self.entries[0].id
+                self.load_entry(self.entries[0])
+            else:
+                self.create_new_entry()
+        self.update_entries_display()
+        self._reload_trash()
 
 
     def load_existing_entries(self):

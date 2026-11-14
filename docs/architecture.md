@@ -16,7 +16,8 @@ switch/                       the pill used for Backspace and Sound
 sound/                        key clicks
 notes/                        names, catalog, atomic writes
 place/                        which folder notes use, and moving them
-history/                      sheet that slides over the writing
+trash/                        deleted notes, kept until they are restored or removed
+history/                      sheet that slides over the writing, and Trash over that
 choice/                       the prompt that asks whether old notes come along
 assets/                       style.qss, default.md
 fonts/                        Lato (OFL)
@@ -38,7 +39,7 @@ The paper starts on White. Each press on its name steps to Warm White, Sepia, Ch
 
 The clock reads 15:00 until it is started. Digits sit in fixed cells. While it runs they warm and a small mark shows beside them. Stopping early returns to 15:00. Reaching zero stops the clock; the next start begins a fresh fifteen minutes. A pointer click on the size, the face, a pill, or the clock returns focus to the page.
 
-Fullscreen(F11) and the F11 key set the fullscreen bit on the window. The window’s state is what shows or hides the bar, so a desktop that leaves fullscreen on its own cannot leave the bar hidden. Escape clears that bit. While History is open, Escape still closes the sheet, and the next Escape leaves fullscreen. F11 does not leave. Entering shows a capsule at the bottom, “Press esc to exit fullscreen”, for two seconds. It is not in the layout, so the writing does not move when it appears.
+Fullscreen(F11) and the F11 key set the fullscreen bit on the window. The window’s state is what shows or hides the bar, so a desktop that leaves fullscreen on its own cannot leave the bar hidden. Escape clears that bit. While History is open, Escape still closes the sheet, and the next Escape leaves fullscreen. Trash, when it is open, takes the first Escape. F11 does not leave. Entering shows a capsule at the bottom, “Press esc to exit fullscreen”, for two seconds. It is not in the layout, so the writing does not move when it appears.
 
 ## A note on disk
 
@@ -48,7 +49,7 @@ Fullscreen(F11) and the F11 key set the fullscreen bit on the window. The window
 { "entries": [ { "id": "<uuid>", "created": "<iso seconds>", "filename": "the morning was slow.md" } ] }
 ```
 
-The catalog is how History keeps the original date after a rename. Deleting `.entries.json` does not delete writing. Dates then fall back to the file’s mtime, and missing ids are new uuids. Files that do not end in `.md`, or that start with a dot, are ignored.
+The catalog is how History keeps the original date after a rename. Deleting `.entries.json` does not delete writing. Dates then fall back to the file’s mtime, and missing ids are new uuids. Files that do not end in `.md`, or that start with a dot, are ignored. Trash is a hidden `.trash` folder inside the notes folder, so it is not a note and it is not listed in History.
 
 Identity is resolved in this order: a catalog row with both `created` and `id`, then a legacy filename, then mtime plus a new uuid.
 
@@ -84,7 +85,15 @@ Under the list, a pinned row shows where notes are saved. A path inside the home
 
 If the current folder has no notes, the new folder is used immediately. If it has notes, a prompt asks whether they should come along. Dismissing it, or Cancel, leaves the folder unchanged. Leaving them keeps every old file where it is, and History then shows the new folder. An empty new folder starts a blank note, not the welcome text.
 
-Moving them transfers the markdown files and merges the catalogs. A name that already exists in the new folder becomes `stem 2.md`, so nothing is overwritten. The note that was open stays open. If the move fails, files already transferred are put back and the new folder's catalog is restored before the setting changes. A move that cannot be fully undone says so, and names both folders.
+Moving them transfers the markdown files and merges the catalogs. A name that already exists in the new folder becomes `stem 2.md`, so nothing is overwritten. Trash moves with them, and merges the same way when the new folder already has one. The note that was open stays open. If the move fails, files already transferred are put back, Trash is put back, and the new folder's catalog is restored before the setting changes. A move that cannot be fully undone says so, and names both folders.
+
+## Trash
+
+Deleting a note in History moves the file into `.trash` and remembers it in that folder's own `.entries.json`, with the original date and the time it was deleted. The note leaves the writing page. If it was the open one, the newest note still in History is opened, or a new note is started when History is empty. Nothing in Trash is removed on its own.
+
+Trash opens from the word under the History title. It slides in from the right edge of the sheet, over History, on the same ease. The chevron returns to History. The corner X, the shaded page, and Escape close the layers one at a time: Trash, then History, then fullscreen.
+
+A row can be put back, which returns the file to the notes folder and to its original place in History, or deleted forever after a confirmation. Empty does that for every note in Trash, also after a confirmation. A name that is already in use when a note comes back becomes `stem 2.md`. The note that is open stays open.
 
 ## Backspace and Sound
 

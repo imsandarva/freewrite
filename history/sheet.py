@@ -1,7 +1,7 @@
 """The list of notes, the header, and the pinned folder row."""
 
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
-from PyQt5.QtGui import QColor, QPainter
+from PyQt5.QtCore import Qt, QRectF, QTimer, pyqtSignal
+from PyQt5.QtGui import QColor, QLinearGradient, QPainter
 from PyQt5.QtWidgets import QFrame, QScrollArea, QVBoxLayout, QWidget
 
 from history.empty_history import EmptyHistory
@@ -13,6 +13,8 @@ from history.month_heading import MonthHeading
 from history.palette import colors
 from history.paper import Paper
 from history.row import HistoryRow
+from history.scroll import scroll_css
+from history.trash_pane import TrashPane
 
 
 class HistorySheet(QWidget):
@@ -21,6 +23,10 @@ class HistorySheet(QWidget):
     export_requested = pyqtSignal(object)
     close_requested = pyqtSignal()
     change_requested = pyqtSignal()
+    trash_requested = pyqtSignal()
+    restore_requested = pyqtSignal(object)
+    purge_requested = pyqtSignal(object)
+    empty_requested = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -28,6 +34,7 @@ class HistorySheet(QWidget):
         self._entries, self._selected_id, self._signature = [], None, None
         self.header = SheetHeader()
         self.header.close_requested.connect(self.close_requested)
+        self.header.trash_requested.connect(self.trash_requested)
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
         self.scroll.setFrameShape(QFrame.NoFrame)
@@ -49,6 +56,13 @@ class HistorySheet(QWidget):
         layout.addWidget(self.header)
         layout.addWidget(self.scroll, 1)
         layout.addWidget(self.place)
+        self.pane = TrashPane()
+        self.pane.setParent(self)
+        self.pane.restore_requested.connect(self.restore_requested)
+        self.pane.purge_requested.connect(self.purge_requested)
+        self.pane.empty_requested.connect(self.empty_requested)
+        self.pane.back_requested.connect(self.close_trash)
+        self.pane.close_requested.connect(self.close_requested)
         self.apply_colors(self._colors)
 
     def apply_colors(self, palette):
@@ -60,15 +74,17 @@ class HistorySheet(QWidget):
         self.list_host.set_paper(self._paper)
         self.scroll.viewport().setAutoFillBackground(False)
         self.scroll.viewport().setStyleSheet("background: %s;" % self._paper.name())
-        self.scroll.setStyleSheet(self._scroll_css(palette))
+        self.scroll.setStyleSheet(scroll_css(palette))
         line = palette["line"]
         self._edge.setStyleSheet("background: rgba(%d, %d, %d, %d);" % (line.red(), line.green(), line.blue(), line.alpha()))
+        self.pane.apply_colors(palette)
         self._refill()
         self.update()
 
     def paintEvent(self, _event):
         painter = QPainter(self)
         painter.fillRect(self.rect(), self._paper)
+        self._paint_trash_shadow(painter)
 
     def set_entries(self, entries, selected_id):
         self._entries, self._selected_id = list(entries), selected_id
@@ -77,13 +93,36 @@ class HistorySheet(QWidget):
     def set_place(self, shown, full):
         self.place.set_place(shown, full)
 
+    def set_trash(self, items):
+        items = list(items)
+        self.header.set_trash_count(len(items))
+        self.pane.set_items(items)
+
+    def open_trash(self):
+        self.pane.open_pane()
+        self.pane.raise_()
+
+    def close_trash(self):
+        """Close Trash when it is showing and not already on its way out."""
+        if not self.pane.is_open() or self.pane.is_closing(): return False
+        self.pane.close_pane()
+        return True
+
+    def park_trash(self):
+        self.pane.park()
+
+    def dismiss_trash(self):
+        self.pane.dismiss()
+
     def mousePressEvent(self, event):
         event.accept()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._edge.setGeometry(0, 0, 1, self.height())
+        self.pane.place()
         self._edge.raise_()
+        if self.pane.isVisible(): self.pane.raise_()
 
     def _sign(self):
         rows = tuple((str(entry.id), entry.preview_text, entry.date) for entry in self._entries)
@@ -121,15 +160,12 @@ class HistorySheet(QWidget):
     def _restore(self, value):
         self.scroll.verticalScrollBar().setValue(value)
 
-    def _scroll_css(self, palette):
-        sheet = palette["sheet"].name()
-        handle = "rgba(212,180,150,0.45)" if palette["sheet"].lightness() < 40 else "rgba(140,104,66,0.38)"
-        hover = "rgba(212,180,150,0.75)" if palette["sheet"].lightness() < 40 else "rgba(140,104,66,0.62)"
-        return (
-            f"QScrollArea {{ border: none; background: {sheet}; }}"
-            f"QScrollBar:vertical {{ background: transparent; width: 8px; margin: 8px 2px 8px 0; }}"
-            f"QScrollBar::handle:vertical {{ background: {handle}; border-radius: 4px; min-height: 36px; }}"
-            f"QScrollBar::handle:vertical:hover {{ background: {hover}; }}"
-            "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }"
-            "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; }"
-        )
+    def _paint_trash_shadow(self, painter):
+        # The shadow sits on History, just left of Trash, and only while Trash is still sliding.
+        progress = self.pane.progress if self.pane.isVisible() else 0
+        if progress <= 0 or progress >= 1: return
+        edge, span = self.pane.x(), 22
+        fade = QLinearGradient(edge - span, 0, edge, 0)
+        fade.setColorAt(0.0, QColor(0, 0, 0, 0))
+        fade.setColorAt(1.0, QColor(0, 0, 0, int(self._colors["shadow"] * progress)))
+        painter.fillRect(QRectF(max(0, edge - span), 0, span, self.height()), fade)

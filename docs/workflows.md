@@ -20,11 +20,13 @@ Two timers call the same save. `textChanged` saves immediately, and a one-second
 
 New Entry inserts a `HumanEntry` (new uuid, `created` = now, no filename yet) at the front of the list and saves it. The editor cursor is moved to the end after a load or a new note. Selecting another note saves the current one first.
 
-Delete removes the markdown file and the catalog row. If the deleted note was open, the newest remaining note is loaded. If none remain, a new note is created.
+Delete moves the note into Trash. The file leaves the notes folder and waits in a hidden `.trash` folder, with the date it was written and the time it was deleted. If the deleted note was open, the newest remaining note is loaded. If none remain, a new note is created. Nothing in Trash is removed until you delete that note there, or empty Trash. Both of those ask first. Restore puts the note back in History, in the month it was written. The note you are writing stays open.
 
 ## History, export, chat
 
 History toggles the sheet. It also closes on Escape (the shortcut is enabled only while the sheet is open), on the corner X, and on a click in the shaded area to the left of the sheet. Focus returns to the editor when the sheet finishes closing.
+
+Trash sits on the count line in History. Opening it slides a second sheet over History. The chevron goes back. Escape closes Trash first, and the next Escape closes History. Restore, Delete forever, and Empty are on that sheet. Delete forever and Empty ask before anything is removed.
 
 The bottom of the sheet is where notes are saved. Change picks a folder. With notes already saved, the prompt offers to bring them or leave them. Esc, Cancel, or a click outside the card keeps the current folder. Leave them points History at the new folder and opens a note from it. Move them brings the old notes along, then keeps the open note on the page. The folder is remembered for the next launch.
 
@@ -48,4 +50,4 @@ Font size cycles 16, 18, 20, 22, 24, 26. The face control cycles Lato, Arial, Sy
 
 The paper name cycles White, Warm White, Sepia, Charcoal, and Black. The first launch is White. Each press steps once and is remembered. The page, the bar, History, and the folder prompt all follow that paper.
 
-Fullscreen(F11), and the F11 key, ask the window to fill the screen. The bar hides with it. A small note at the bottom reads “Press esc to exit fullscreen” and leaves after two seconds. Escape leaves fullscreen. While History is open, Escape closes the sheet first and the next Escape leaves fullscreen. F11 does not leave.
+Fullscreen(F11), and the F11 key, ask the window to fill the screen. The bar hides with it. A small note at the bottom reads “Press esc to exit fullscreen” and leaves after two seconds. Escape leaves fullscreen. While Trash is open, Escape closes Trash first. While History is open, Escape closes the sheet, and the next Escape leaves fullscreen. F11 does not leave.

@@ -19,6 +19,10 @@ class HistoryDrawer(QWidget):
     change_requested = pyqtSignal()
     dismissed = pyqtSignal()
     opened = pyqtSignal()
+    trash_requested = pyqtSignal()
+    restore_requested = pyqtSignal(object)
+    purge_requested = pyqtSignal(object)
+    empty_requested = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -32,6 +36,10 @@ class HistoryDrawer(QWidget):
         self.sheet.export_requested.connect(self.export_requested)
         self.sheet.close_requested.connect(self.close_sheet)
         self.sheet.change_requested.connect(self.change_requested)
+        self.sheet.trash_requested.connect(self.trash_requested)
+        self.sheet.restore_requested.connect(self.restore_requested)
+        self.sheet.purge_requested.connect(self.purge_requested)
+        self.sheet.empty_requested.connect(self.empty_requested)
         self._anim = QPropertyAnimation(self, b"progress", self)
         self._anim.finished.connect(self._on_finished)
         self.setAttribute(Qt.WA_NoSystemBackground, True)
@@ -60,6 +68,15 @@ class HistoryDrawer(QWidget):
     def set_place(self, shown, full):
         self.sheet.set_place(shown, full)
 
+    def set_trash(self, items):
+        self.sheet.set_trash(items)
+
+    def open_trash(self):
+        self.sheet.open_trash()
+
+    def close_trash(self):
+        return self.sheet.close_trash()
+
     def is_open(self):
         return self.isVisible() and self._progress > 0.01
 
@@ -77,6 +94,7 @@ class HistoryDrawer(QWidget):
 
     def close_sheet(self):
         if not self.isVisible() or self._closing: return
+        self.sheet.park_trash()
         self._closing = True
         self._run(0.0, _CLOSE_MS)
 
@@ -135,6 +153,7 @@ class HistoryDrawer(QWidget):
 
     def _on_finished(self):
         if self._closing and self._progress <= 0.001:
+            self.sheet.dismiss_trash()
             self.hide()
             self._closing = False
             self.dismissed.emit()

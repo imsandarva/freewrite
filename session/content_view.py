@@ -19,12 +19,13 @@ from session.prompts import AI_CHAT_PROMPT, CLAUDE_PROMPT, FONT_SIZES, PLACEHOLD
 from session.text_direction import TextDirection
 from session.theme import ThemeControl
 from session.timer_control import TimerControl
+from session.trash_flow import TrashFlow
 from papers.catalog import saved_paper
 from sound.key_clicks import KeyClicks
 from sound.settings import saved_sound_on
 
 
-class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, FullscreenControl, TextDirection, EntryStore, ChatActions, PdfExport, PlaceFlow, QWidget):
+class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, FullscreenControl, TextDirection, EntryStore, ChatActions, PdfExport, PlaceFlow, TrashFlow, QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.entries = []
@@ -90,6 +91,7 @@ class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, Fullsc
         self.main_v_layout.addWidget(self.bottom_nav)
         # History floats over the page, so the writing does not reflow when it opens.
         self._wire_history(self.paper)
+        self._wire_trash()
         self._wire_fullscreen()
         self.update_styles()
 

@@ -40,10 +40,19 @@ class NoteLibrary:
         return self._read_name(entry.filename)
 
     def delete(self, entry):
+        """Remove a note for good. History does not call this. It moves the file into Trash instead."""
         path = os.path.join(self.directory, entry.filename) if entry.filename else ""
         if path and os.path.isfile(path): os.remove(path)
-        kept = [rec for rec in self._read_catalog() if rec.get("id") != str(entry.id)]
-        self._write_records(kept)
+        self.forget(entry)
+
+    def forget(self, entry):
+        """Drop a note from the catalog after its file has already left this folder."""
+        note_id = str(entry.id)
+        self._write_records([rec for rec in self._read_catalog() if rec.get("id") != note_id])
+
+    def adopt(self, entry):
+        """Remember a note whose file is already in this folder."""
+        self._remember(entry)
 
     def _unchanged(self, entry, desired, text):
         if entry.filename != desired or not entry.filename: return False

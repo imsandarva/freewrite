@@ -44,7 +44,7 @@ class HistoryRow(QWidget):
         hot = self._hit(event.pos())
         if hot != self._hot:
             self._hot = hot
-            self.setToolTip({"delete": "Delete", "export": "Save as PDF"}.get(hot, ""))
+            self.setToolTip({"delete": "Move to Trash", "export": "Save as PDF"}.get(hot, ""))
             self.update()
         super().mouseMoveEvent(event)
 

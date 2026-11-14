@@ -12,6 +12,7 @@ from place.directory import _ready
 from place.display import settle
 from place.error import PlaceError
 from place.inventory import _note_names, _taken
+from trash.moving import carry_trash
 
 
 def relocate(source, dest):
@@ -25,17 +26,21 @@ def relocate(source, dest):
     names = _note_names(source)
     plan = _plan(names, _taken(dest))
     snapshot, had_catalog = read_records(dest), os.path.isfile(os.path.join(dest, CATALOG_NAME))
-    moved = []
+    moved, undo_trash = [], lambda: None
     try:
         for src_name, dst_name in plan:
             _move_one(os.path.join(source, src_name), os.path.join(dest, dst_name))
             moved.append((src_name, dst_name))
         merged, changed = _merged(source, snapshot, dict(plan))
+        # Trash travels with the notes. If a later step fails, it is put back before the notes are.
+        undo_trash = carry_trash(source, dest) or (lambda: None)
         write_records(dest, merged)
         _remove_catalog(source)
     except PlaceError:
         raise
     except Exception:
+        try: undo_trash()
+        except Exception: pass
         stuck = _restore(moved, source, dest)
         _restore_catalog(dest, snapshot, had_catalog)
         if stuck: raise PlaceError("The move stopped partway", "Some notes are in the new folder and some are still in the previous one. Take a look at both before you keep writing.")

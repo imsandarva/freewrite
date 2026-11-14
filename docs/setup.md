@@ -51,4 +51,4 @@ Edit the packages at the project root, then run the build script again. The tree
 
 For the two switches, stored booleans and the strings `0`, `false`, `no`, and `off` count as off.
 
-Notes themselves are not in settings. They are files in `notesDirectory`, described in [Architecture](architecture.md). Changing the folder from History can move those files. The setting is updated only after that choice is finished.
+Notes themselves are not in settings. They are files in `notesDirectory`, described in [Architecture](architecture.md). Deleted notes stay in a hidden `.trash` folder there until they are restored or removed. Changing the folder from History can move the notes, and Trash moves with them. The setting is updated only after that choice is finished.

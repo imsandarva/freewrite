@@ -69,6 +69,7 @@ class PlaceFlow:
         self.library = library
         self.entries = entries
         self._show_place()
+        self._adopt_trash(path)
         kept = self._kept(keep_id)
         if kept is not None:
             self.selected_entry_id = kept.id

@@ -13,3 +13,18 @@ def ask_move(parent, path, paper, count, crowded):
 
 def tell(parent, title, body, paper):
     _Prompt.open(parent, paper, title, body, "", (("Okay", "okay", True),), False)
+
+
+def ask_delete(parent, paper):
+    """'delete' or 'cancel'. Cancel leaves the note in Trash."""
+    return _Prompt.open(
+        parent, paper, "Delete this note forever?",
+        "This takes it out of Trash. You won't be able to bring it back.",
+        "", (("Delete", "delete", True),), True,
+    )
+
+
+def ask_empty(parent, paper, count):
+    """'empty' or 'cancel'. Cancel leaves Trash as it is."""
+    body = "The note waiting in Trash will be deleted forever." if count == 1 else "Every note waiting in Trash will be deleted forever."
+    return _Prompt.open(parent, paper, "Empty Trash?", body, "", (("Empty Trash", "empty", True),), True)

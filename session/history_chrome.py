@@ -21,9 +21,15 @@ class HistoryChrome:
         self._history_escape = QShortcut(QKeySequence(Qt.Key_Escape), self)
         self._history_escape.setContext(Qt.WindowShortcut)
         self._history_escape.setEnabled(False)
-        self._history_escape.activated.connect(self.history.close_sheet)
+        self._history_escape.activated.connect(self._escape_history)
+
+    def _escape_history(self):
+        # Trash closes first. The next Escape closes History, and only then can fullscreen leave.
+        if self.history.close_trash(): return
+        self.history.close_sheet()
 
     def _history_shown(self):
+        self._reload_trash()
         self._history_escape.setEnabled(True)
         self._set_history_open(True)
         self._sync_fullscreen_keys()

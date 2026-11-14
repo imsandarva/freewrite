@@ -14,12 +14,13 @@ def month_name(created, today):
     return created.strftime("%B %Y")
 
 
-def group_by_month(entries, today=None):
+def group_by_month(entries, today=None, moment=None):
     """Newest first, already sorted. A heading appears only when the month changes."""
     today = today or date.today()
+    moment = moment or (lambda entry: entry.created)
     groups = []
     for entry in entries:
-        label = month_name(entry.created, today)
+        label = month_name(moment(entry), today)
         if not groups or groups[-1][0] != label: groups.append((label, [entry]))
         else: groups[-1][1].append(entry)
     return groups
