@@ -1,4 +1,4 @@
-"""The bottom bar: size, face, the pills, the clock, and the session buttons."""
+"""The bottom bar: face, the pills, the clock, and the session buttons."""
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QHBoxLayout, QWidget
@@ -12,7 +12,6 @@ from sound.settings import remember_sound
 from switch.quiet_switch import QuietSwitch
 from typeface.apply_face import apply_face
 from typeface.bar_rule import BarRule
-from typeface.size_cycle import SizeCycle
 from typeface.text_button import text_button
 from typeface.type_cycle import TypeCycle
 
@@ -25,8 +24,6 @@ class BarControls:
         self.bottom_nav_layout = QHBoxLayout(self.bottom_nav)
         self.bottom_nav_layout.setContentsMargins(18, 2, 12, 6)
         self.bottom_nav_layout.setSpacing(0)
-        self.size_cycle = SizeCycle(self.font_sizes, self.font_size, paper)
-        self.size_cycle.chosen.connect(self.use_size)
         self.type_cycle = TypeCycle(paper)
         self.type_cycle.chosen.connect(self.use_typeface)
         self.selected_font = self.type_cycle.family()
@@ -48,7 +45,7 @@ class BarControls:
         self.history_btn = text_button("History")
         self.history_btn.clicked.connect(self.toggle_history)
         for widget, gap in (
-            (self.size_cycle, 2), (self.type_cycle, 16), (self.bar_rule, 16),
+            (self.type_cycle, 16), (self.bar_rule, 16),
             (self.backspace_switch, 14), (self.sound_switch, 12), (self.clock, 0),
         ):
             self._add_bar(widget, gap)
@@ -70,11 +67,6 @@ class BarControls:
         remember_sound(on)
         self.key_sound.set_enabled(on)
         if self.sound_switch.was_pointer(): self.text_edit.setFocus()
-
-    def use_size(self, pixels):
-        self.font_size = int(pixels)
-        self._apply_writing_font()
-        self._return_to_page(self.size_cycle)
 
     def use_typeface(self, family):
         self.selected_font = family

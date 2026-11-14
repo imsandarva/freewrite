@@ -14,10 +14,10 @@ class HistoryRow(QWidget):
     delete_requested = pyqtSignal(object)
     export_requested = pyqtSignal(object)
 
-    def __init__(self, entry, selected, palette):
+    def __init__(self, entry, selected, palette, keyed=False):
         super().__init__()
         self._entry, self._selected, self._colors = entry, selected, palette
-        self._hover, self._hot = False, ""
+        self._keyed, self._hover, self._hot = bool(keyed), False, ""
         self.setFixedHeight(76)
         self.setAutoFillBackground(False)
         self.setMouseTracking(True)
@@ -66,6 +66,12 @@ class HistoryRow(QWidget):
         self.update()
         super().leaveEvent(event)
 
+    def set_keyed(self, keyed):
+        keyed = bool(keyed)
+        if keyed == self._keyed: return
+        self._keyed = keyed
+        self.update()
+
     def paintEvent(self, _event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -73,12 +79,12 @@ class HistoryRow(QWidget):
         painter.fillRect(self.rect(), self._colors["sheet"])
         self._paint_wash(painter)
         self._paint_words(painter)
-        if self._hover or self._selected: self._paint_actions(painter)
+        if self._hover or self._selected or self._keyed: self._paint_actions(painter)
 
     def _paint_wash(self, painter):
-        if not (self._selected or self._hover): return
+        if not (self._selected or self._keyed or self._hover): return
         painter.setPen(Qt.NoPen)
-        painter.setBrush(self._colors["selected"] if self._selected else self._colors["hover"])
+        painter.setBrush(self._colors["selected"] if (self._selected or self._keyed) else self._colors["hover"])
         painter.drawRoundedRect(QRectF(10, 3, self.width() - 20, self.height() - 6), 12, 12)
         if not self._selected: return
         painter.setBrush(self._colors["accent"])

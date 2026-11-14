@@ -1,6 +1,8 @@
 # Workflows
 
-The bottom bar is the whole interface. On the left: font size, one face control (it opens on Lato), Backspace, Sound, and a 15:00 timer. On the right: Chat, Fullscreen(F11), New Entry, the paper name (it opens on White), and History.
+The bottom bar is the whole interface. On the left: one face control (it opens on Lato), Backspace, Sound, and a 15:00 timer. On the right: Chat, Fullscreen(F11), New Entry, the paper name (it opens on White), and History.
+
+Ctrl+N starts a new note. Ctrl+H opens and closes History. In History, Up and Down move between notes and Enter opens the marked one. Ctrl++ and Ctrl+- change the type size, and so does Ctrl+=. The size steps through 16, 18, 20, 22, 24, and 26, and it does not wrap past either end.
 
 Backspace and Sound are pills, with no On or Off written on them. The knob on the left, on a neutral track, is off. The knob on the right, on the warm fill, is on. Sound, when on, makes a quiet click as you type. When it is off, the keys are silent. Backspace, when off, neither erases nor clicks.
 
@@ -9,8 +11,8 @@ Backspace and Sound are pills, with no On or Off written on them. The knob on th
 `NoteLibrary.load()` reads the remembered notes folder (`~/freewrite_notes` until you choose another), migrates legacy names, and returns entries newest first.
 
 - No notes: create one and, because it is the only note, fill it from `assets/default.md`.
-- Notes exist, none of them is an empty note dated today, and the folder is not a single welcome file: create an empty note and select it. The welcome check looks for the words `Welcome to Freewrite` in the only file.
-- Otherwise: open today’s empty note, or that welcome note.
+- Notes exist, and the folder is not a single welcome file: open a blank page. It is not written until there is something on it. The welcome check looks for the words `Welcome to Freewrite` in the only file.
+- Otherwise: open that welcome note.
 
 `date` on an entry is `created` formatted as `Nov 12`, so “today” follows the catalog time, not the file mtime.
 
@@ -18,7 +20,7 @@ Backspace and Sound are pills, with no On or Off written on them. The knob on th
 
 Two timers call the same save. `textChanged` saves immediately, and a one-second timer saves again. Both no-op until a note is selected. `NoteLibrary.save` skips the write when the filename and body are unchanged, then refreshes the history row only if the preview string changed.
 
-New Entry inserts a `HumanEntry` (new uuid, `created` = now, no filename yet) at the front of the list and saves it. The editor cursor is moved to the end after a load or a new note. Selecting another note saves the current one first.
+New Entry opens a blank page. Nothing is stored, and History does not list it, until the page has something besides spaces and line breaks. Starting another new note while that page is still blank just stays there. Selecting another note saves the current one first, and leaves the blank page behind. Clearing a saved note removes its file and its History row; typing again saves it once more. The editor cursor is moved to the end after a load or a new note.
 
 Delete moves the note into Trash. The file leaves the notes folder and waits in a hidden `.trash` folder, with the date it was written and the time it was deleted. If the deleted note was open, the newest remaining note is loaded. If none remain, a new note is created. Nothing in Trash is removed until you delete that note there, or empty Trash. Both of those ask first. Restore puts the note back in History, in the month it was written. The note you are writing stays open.
 
@@ -46,7 +48,7 @@ ChatGPT uses `https://chat.openai.com/?m=`. Claude uses `https://claude.ai/new?q
 
 The timer is a one-second `QTimer` that is always running. The clock starts a 900-second countdown and shows `MM:SS` in fixed cells, so the digits do not shift. Pressing it again resets to `15:00`. At zero the countdown stops and the mark fades; the next press starts a fresh fifteen minutes. The bar does not hide.
 
-Font size cycles 16, 18, 20, 22, 24, 26. The face control cycles Lato, Arial, System, and Serif. Arial resolves to Arial or Liberation Sans. System is the desktop interface face. Serif resolves to the first installed book face, preferring Gentium Book Basic. The label is drawn in that face and crossfades on each click, with no line under the word. Size and face apply to the words already on the page. They are not written to settings.
+Ctrl++ and Ctrl+- step the type size through 16, 18, 20, 22, 24, and 26. Holding the keys keeps stepping, and the size stays put at 16 and at 26. The face control cycles Lato, Arial, System, and Serif. Arial resolves to Arial or Liberation Sans. System is the desktop interface face. Serif resolves to the first installed book face, preferring Gentium Book Basic. The label is drawn in that face and crossfades on each click, with no line under the word. Size and face apply to the words already on the page. They are not written to settings.
 
 The paper name cycles White, Warm White, Sepia, Charcoal, and Black. The first launch is White. Each press steps once and is remembered. The page, the bar, History, and the folder prompt all follow that paper.
 

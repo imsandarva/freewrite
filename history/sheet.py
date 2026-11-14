@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt, QRectF, QTimer, pyqtSignal
 from PyQt5.QtGui import QColor, QLinearGradient, QPainter
 from PyQt5.QtWidgets import QFrame, QScrollArea, QVBoxLayout, QWidget
 
+from history.cursor import moved
 from history.empty_history import EmptyHistory
 from history.grouping import count_label, group_by_month
 from history.header import SheetHeader
@@ -32,6 +33,7 @@ class HistorySheet(QWidget):
         super().__init__()
         self._colors = colors(False)
         self._entries, self._selected_id, self._signature = [], None, None
+        self._cursor, self._rows = -1, []
         self.header = SheetHeader()
         self.header.close_requested.connect(self.close_requested)
         self.header.trash_requested.connect(self.trash_requested)
@@ -87,8 +89,32 @@ class HistorySheet(QWidget):
         self._paint_trash_shadow(painter)
 
     def set_entries(self, entries, selected_id):
+        previous = self._cursor_id()
+        follow = selected_id if selected_id != self._selected_id else previous
         self._entries, self._selected_id = list(entries), selected_id
+        self._cursor = self._placed(follow)
         self._refill()
+
+    def arm_cursor(self):
+        """Start the keyboard mark on the note that is open, then bring that row into view."""
+        self._cursor = self._placed(self._selected_id)
+        self._mark_rows()
+        self._reveal_cursor()
+        QTimer.singleShot(0, self._reveal_cursor)
+
+    def move_cursor(self, delta):
+        nxt = moved(self._cursor, len(self._entries), delta)
+        if nxt == self._cursor: return
+        self._cursor = nxt
+        self._mark_rows()
+        self._reveal_cursor()
+
+    def open_cursor(self):
+        if not 0 <= self._cursor < len(self._entries): return
+        self.chosen.emit(self._entries[self._cursor])
+
+    def trash_covers(self):
+        return self.pane.isVisible() and not self.pane.is_closing()
 
     def set_place(self, shown, full):
         self.place.set_place(shown, full)
@@ -136,6 +162,7 @@ class HistorySheet(QWidget):
         drop_children(self.list_layout)
         self.header.set_count(count_label(len(self._entries)))
         if not self._entries:
+            self._rows = []
             self.list_layout.addWidget(EmptyHistory(self._colors["muted"], self._colors["sheet"]))
             self.list_layout.addStretch(1)
         else:
@@ -143,19 +170,46 @@ class HistorySheet(QWidget):
         QTimer.singleShot(0, lambda value=place: self._restore(value))
 
     def _add_rows(self):
-        first = True
+        self._rows, first, index = [], True, 0
         for label, rows in group_by_month(self._entries):
             self.list_layout.addWidget(MonthHeading(label, self._colors["muted"], self._colors["sheet"], first))
             first = False
-            for entry in rows: self._add_row(entry)
+            for entry in rows:
+                self._add_row(entry, index)
+                index += 1
         self.list_layout.addStretch(1)
 
-    def _add_row(self, entry):
-        row = HistoryRow(entry, entry.id == self._selected_id, self._colors)
+    def _add_row(self, entry, index):
+        row = HistoryRow(entry, entry.id == self._selected_id, self._colors, index == self._cursor)
         row.chosen.connect(self.chosen)
         row.delete_requested.connect(self.delete_requested)
         row.export_requested.connect(self.export_requested)
+        self._rows.append(row)
         self.list_layout.addWidget(row)
+
+    def _cursor_id(self):
+        if not 0 <= self._cursor < len(self._entries): return None
+        return self._entries[self._cursor].id
+
+    def _placed(self, entry_id):
+        found = self._index_of(entry_id)
+        if found >= 0: return found
+        found = self._index_of(self._selected_id)
+        if found >= 0: return found
+        return 0 if self._entries else -1
+
+    def _index_of(self, entry_id):
+        if entry_id is None: return -1
+        for index, entry in enumerate(self._entries):
+            if entry.id == entry_id: return index
+        return -1
+
+    def _mark_rows(self):
+        for index, row in enumerate(self._rows): row.set_keyed(index == self._cursor)
+
+    def _reveal_cursor(self):
+        if not 0 <= self._cursor < len(self._rows): return
+        self.scroll.ensureWidgetVisible(self._rows[self._cursor], 0, 48)
 
     def _restore(self, value):
         self.scroll.verticalScrollBar().setValue(value)

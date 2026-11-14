@@ -16,6 +16,7 @@ from session.history_chrome import HistoryChrome
 from session.pdf_export import PdfExport
 from session.place_flow import PlaceFlow
 from session.prompts import AI_CHAT_PROMPT, CLAUDE_PROMPT, FONT_SIZES, PLACEHOLDER_OPTIONS
+from session.shortcuts import SessionKeys
 from session.text_direction import TextDirection
 from session.theme import ThemeControl
 from session.timer_control import TimerControl
@@ -25,7 +26,7 @@ from sound.key_clicks import KeyClicks
 from sound.settings import saved_sound_on
 
 
-class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, FullscreenControl, TextDirection, EntryStore, ChatActions, PdfExport, PlaceFlow, TrashFlow, QWidget):
+class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, FullscreenControl, TextDirection, EntryStore, ChatActions, PdfExport, PlaceFlow, TrashFlow, SessionKeys, QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.entries = []
@@ -105,3 +106,4 @@ class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, Fullsc
         self.save_timer.timeout.connect(self.save_current_entry)
         self.save_timer.start(1000)
         self._apply_writing_font()
+        self._wire_keys()

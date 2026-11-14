@@ -30,6 +30,7 @@ class HistoryChrome:
 
     def _history_shown(self):
         self._reload_trash()
+        self.history.arm_cursor()
         self._history_escape.setEnabled(True)
         self._set_history_open(True)
         self._sync_fullscreen_keys()
@@ -63,7 +64,10 @@ class HistoryChrome:
         hint = getattr(self, "_exit_hint", None)
         if hint is not None: hint.place()
     def update_entries_display(self):
-        self.history.set_entries(self.entries, self.selected_entry_id)
+        self.history.set_entries(self._saved_entries(), self.selected_entry_id)
+
+    def _saved_entries(self):
+        return [entry for entry in self.entries if entry.filename]
     def toggle_history(self):
         self.history.toggle()
 

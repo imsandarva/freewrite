@@ -23,7 +23,7 @@ class ThemeControl:
 
     def _paper_widgets(self):
         return (
-            self.size_cycle, self.type_cycle, self.paper_cycle, self.bar_rule,
+            self.type_cycle, self.paper_cycle, self.bar_rule,
             self.backspace_switch, self.sound_switch, self.clock,
         )
 

@@ -10,6 +10,11 @@ def flattened(text):
     return text.replace("\r\n", " ").replace("\r", " ").replace("\n", " ").replace("\t", " ").strip()
 
 
+def has_writing(text):
+    """True when the page has something besides spaces and line breaks."""
+    return bool(flattened(text or ""))
+
+
 def history_preview(text):
     flat = flattened(text)
     if len(flat) > PREVIEW_CHARS: return flat[:PREVIEW_CHARS] + "..."

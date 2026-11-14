@@ -65,6 +65,18 @@ class HistoryDrawer(QWidget):
     def set_entries(self, entries, selected_id):
         self.sheet.set_entries(entries, selected_id)
 
+    def arm_cursor(self):
+        self.sheet.arm_cursor()
+
+    def move_cursor(self, delta):
+        self.sheet.move_cursor(delta)
+
+    def open_cursor(self):
+        self.sheet.open_cursor()
+
+    def trash_covers(self):
+        return self.sheet.trash_covers()
+
     def set_place(self, shown, full):
         self.sheet.set_place(shown, full)
 

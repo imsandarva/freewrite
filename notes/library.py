@@ -7,7 +7,7 @@ from datetime import datetime
 from notes.catalog import _parse_id, _parse_time, read_records, write_records
 from notes.constants import _LEGACY_NAME, _STAMP
 from notes.entry import HumanEntry
-from notes.naming import allocate_name, history_preview, stem_from_content, unique_filename
+from notes.naming import allocate_name, has_writing, history_preview, stem_from_content, unique_filename
 from notes.atomic_write import write_atomic
 
 
@@ -20,12 +20,17 @@ class NoteLibrary:
         self._clear_temps()
         catalog = self._catalog_by_name()
         entries = [self._entry_from_file(name, catalog.get(name)) for name in self._note_names()]
+        entries = self._without_blanks(entries)
         self._rename_legacy(entries)
         entries.sort(key=lambda entry: entry.created, reverse=True)
         self._write_catalog(entries)
         return entries
 
     def save(self, entry, text):
+        # A blank page is not a note. It stays off disk and out of History.
+        if not has_writing(text):
+            self._drop_blank(entry)
+            return
         os.makedirs(self.directory, exist_ok=True)
         desired = unique_filename(self.directory, stem_from_content(text), entry.filename)
         if self._unchanged(entry, desired, text):
@@ -38,6 +43,39 @@ class NoteLibrary:
 
     def read(self, entry):
         return self._read_name(entry.filename)
+
+    def _drop_blank(self, entry):
+        """Drop a note that no longer has words, including one that was saved and then cleared."""
+        if not entry.filename: return
+        if not self._unlink(entry): return
+        self.forget(entry)
+        entry.filename = ""
+        entry.preview_text = ""
+
+    def _without_blanks(self, entries):
+        kept = []
+        for entry in entries:
+            if not self._blank_file(entry) or not self._unlink(entry): kept.append(entry)
+        return kept
+
+    def _blank_file(self, entry):
+        if entry.preview_text: return False
+        path = os.path.join(self.directory, entry.filename) if entry.filename else ""
+        if not path or not os.path.isfile(path): return False
+        try:
+            with open(path, "r", encoding="utf-8") as handle: return not has_writing(handle.read())
+        except (OSError, UnicodeError):
+            return False
+
+    def _unlink(self, entry):
+        path = os.path.join(self.directory, entry.filename) if entry.filename else ""
+        if not path or not os.path.isfile(path): return True
+        try:
+            os.remove(path)
+        except OSError as error:
+            print("Error removing empty note: %s" % error)
+            return False
+        return True
 
     def delete(self, entry):
         """Remove a note for good. History does not call this. It moves the file into Trash instead."""

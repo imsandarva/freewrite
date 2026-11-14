@@ -9,13 +9,14 @@ from PyQt5.QtGui import QTextCursor
 from app.paths import resource
 from editing.gap import without_top_gap
 from notes.entry import HumanEntry
-from notes.naming import history_preview
+from notes.naming import has_writing, history_preview
 
 
 class EntryStore:
     def select_entry(self, entry):
-        if self.selected_entry_id:
+        if self.selected_entry_id and self.selected_entry_id != entry.id:
             self.save_current_entry()
+            self._release_blank()
         self.selected_entry_id = entry.id
         self.load_entry(entry)
         self.update_entries_display()
@@ -30,11 +31,11 @@ class EntryStore:
                 self.save_entry(entry)
 
     def save_entry(self, entry):
-        previous = entry.preview_text
+        previous = (entry.filename, entry.preview_text)
         try:
             self.library.save(entry, self.text)
-            self.update_preview_text(entry)
-            if entry.preview_text != previous: self.update_entries_display()
+            if has_writing(self.text): self.update_preview_text(entry)
+            if (entry.filename, entry.preview_text) != previous: self.update_entries_display()
         except Exception as e:
             print(f"Error saving entry: {e}")
 
@@ -52,7 +53,12 @@ class EntryStore:
             print(f"Error loading entry: {e}")
 
     def create_new_entry(self):
-        self._add_entry(not self.entries)
+        if self._on_blank():
+            self._show_blank()
+            return
+        self.save_current_entry()
+        self._release_blank()
+        self._add_entry(not any(item.filename for item in self.entries))
 
     def _add_entry(self, welcome):
         new_entry = HumanEntry.create_new()
@@ -65,13 +71,34 @@ class EntryStore:
         else:
             self.text = ""
             self.placeholder_text = random.choice(self.placeholder_options)
-            self.save_entry(new_entry)
-        self.text_edit.setPlainText(self.text)
+        self._show_text(self.text)
+        self.update_entries_display()
+
+    def _show_blank(self):
+        self.text = ""
+        self.placeholder_text = random.choice(self.placeholder_options)
+        self._show_text("")
+
+    def _show_text(self, text):
+        self.text_edit.setPlainText(text)
         cursor = self.text_edit.textCursor()
         cursor.movePosition(QTextCursor.End)
         self.text_edit.setTextCursor(cursor)
         self._apply_writing_font()
-        self.update_entries_display()
+        self.text_edit.setFocus()
+
+    def _on_blank(self):
+        current = self._current_entry()
+        return current is not None and not current.filename and not has_writing(self.text)
+
+    def _release_blank(self):
+        current = self._current_entry()
+        if current is None or current.filename: return
+        self.entries = [item for item in self.entries if item.id != current.id]
+
+    def _current_entry(self):
+        if not self.selected_entry_id: return None
+        return next((item for item in self.entries if item.id == self.selected_entry_id), None)
 
     def _welcome_text(self):
         try:
