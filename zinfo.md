@@ -1,10 +1,8 @@
-1) now i want to add few things: 
-shortcuts for: 
-- creating new entry note: ctrl+n,
-- viewing history: ctrl+h. and after i open history tab: i should be able to navigate between the notes with arrow keys like down or up and presssing enter where my note is selected should open that note. 
-- increasing font size: ctrl + + ( i mean control plus + key), decreasing font size: ctrl + -. 
-
-2) since we'll be using these shortcuts for increasing/decreasing font sizes, i guess we wo'nt need that font-size button that we have in the leftest-side of bottombar(the one where when we click it automatically increases), so please remove this entirely from there.
 
 
-3) also do this: currently what we do is: even if i create new entry but write nothing: it saves that note with name "untitled" thing. but let's do this: let's not save the untitled note at all, neither in file, nor in history ofcourse. like we'll only save a note, if there's something written there. 
+1) whenever i open freewrite currently it opens in minimized-form, even though i closed that freewrite in maximized-window form. so please make it like: open it on whatever form that i kept last time, like most 
+programs window at pc: if i close some software's gui window in minimzed form: when i open it next time --> it gets opened in that minimzed window, and same for maximized window form.
+
+2) i should be able to close the window with ctrl+w, like close the software, just like alt+f4 i guess.
+
+3) and currently whenever i search "note" in my search in desktop screen --> it shows freewrite as the first software. whenever i need to open freewrite, i search with its name "freewrite". so please make it like: only show up when  i start to type or when i'm typing freewrite, not notepad. 

@@ -13,17 +13,20 @@ from typeface.specimen import specimen
 class TypeCycle(_FadeWord):
     chosen = pyqtSignal(str)
 
-    def __init__(self, paper, parent=None):
+    def __init__(self, paper, face="Lato", parent=None):
         self._faces = writing_faces()
-        self._index = 0
+        self._index = _index_for(self._faces, face)
         super().__init__("typeCycle", paper, parent)
         self._fit_faces()
-        label, family = self._faces[0]
+        label, family = self._faces[self._index]
         self._set_word(label, specimen(family, _SPECIMEN), False)
         self._announce()
 
     def family(self):
         return self._faces[self._index][1]
+
+    def label(self):
+        return self._faces[self._index][0]
 
     def _fit_faces(self):
         widest = 0
@@ -45,3 +48,10 @@ class TypeCycle(_FadeWord):
         label, family = self._faces[self._index]
         self._set_word(label, specimen(family, _SPECIMEN), True)
         self.chosen.emit(family)
+
+
+def _index_for(faces, face):
+    want = str(face or "").strip().lower()
+    for index, (label, _family) in enumerate(faces):
+        if label.lower() == want: return index
+    return 0

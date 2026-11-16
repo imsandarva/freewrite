@@ -6,7 +6,7 @@
 main.py                       installed entry: locale, then the window
 freewriteApp.py               source entry
 app/                          the window, and where assets and fonts are found
-utils/                        the settings identity, and how an on/off value is read
+utils/                        the settings identity, on/off values, and writing a value through
 papers/                       the five writing papers, and the name that steps through them
 session/                      the page: bar, timer, theme, notes, chat, PDF, folder
 editing/                      the editor, and which keys count as typing
@@ -31,17 +31,17 @@ fonts/                        Lato (OFL)
 
 The left side is the writing setup, in this order: face, a short rule, Backspace, Sound, the clock. The right side is the rest of the session: Chat, Fullscreen(F11), New Entry, the paper name, History.
 
-The face starts at Lato and steps through Arial, System, and Serif, then back to Lato. Arial is Liberation Sans when Arial is not installed. System is the desktop’s interface face. Serif prefers Gentium Book Basic, then Gentium, Liberation Serif, and a few other book faces. The word is drawn in the face it names and crossfades into the next one. Nothing is drawn under it. The page, including words already written, changes on the click.
+The face opens on the one last chosen, and the first launch is Lato. It steps through Arial, System, and Serif, then back to Lato. Arial is Liberation Sans when Arial is not installed. System is the desktop’s interface face. Serif prefers Gentium Book Basic, then Gentium, Liberation Serif, and a few other book faces. The word is drawn in the face it names and crossfades into the next one. Nothing is drawn under it. The page, including words already written, changes on the click. What is remembered is the short name, `writingFace`, not the family that name resolved to on this computer. An unfamiliar name opens on Lato.
 
-The paper starts on White. Each press on its name steps to Warm White, Sepia, Charcoal, then Black, then back to White. White is pure white. Warm White is ivory. Sepia is a muted beige. Charcoal is a soft dark gray. Black is true black. The choice is remembered as `colorScheme`. An older `light` value is White, and an older `dark` value is Black. The name crossfades the same way the face does. History, the pills, the clock, and the fullscreen note all take their colors from that paper.
+The paper starts on White. Each press on its name steps to Warm White, Sepia, Charcoal, then Black, then back to White. White is pure white. Warm White is ivory. Sepia is a muted beige. Charcoal is a soft dark gray. Black is true black. The choice is remembered as `colorScheme`, and the write is flushed immediately so a quick quit still keeps it. An older `light` value is White, and an older `dark` value is Black. The name crossfades the same way the face does. History, the pills, the clock, and the fullscreen note all take their colors from that paper.
 
 `apply_face` sets the widget font, the document default, and the characters already on the page, and it puts the caret back. Theme reload polishes the editor and would otherwise drop the widget font to the application default. The characters keep the face.
 
 The clock reads 15:00 until it is started. Digits sit in fixed cells. While it runs they warm and a small mark shows beside them. Stopping early returns to 15:00. Reaching zero stops the clock; the next start begins a fresh fifteen minutes. A pointer click on the face, a pill, or the clock returns focus to the page.
 
-Ctrl+N starts a new note. Ctrl+H opens History, and the same keys close it. While History is open, Up and Down move through the notes and Enter opens the marked one. The mark starts on the note already on the page, and it stops at the top and the bottom rather than wrapping. Trash still takes the keys while it covers the list. Ctrl++ and Ctrl+- step the type size through 16, 18, 20, 22, 24, and 26, and the size stays at either end. The same plus key without Shift (`Ctrl+=`) steps up too. These keys are watched on the window, because the writing page would otherwise keep the arrows and Enter for itself.
+Ctrl+N starts a new note. Ctrl+H opens History, and the same keys close it. While History is open, Up and Down move through the notes and Enter opens the marked one. The mark starts on the note already on the page, and it stops at the top and the bottom rather than wrapping. Trash still takes the keys while it covers the list. Ctrl++ and Ctrl+- step the type size through 16, 18, 20, 22, 24, and 26, and the size stays at either end. The same plus key without Shift (`Ctrl+=`) steps up too. The size is remembered as `writingSize`. A missing or unfamiliar value is 18. These keys are watched on the window, because the writing page would otherwise keep the arrows and Enter for itself.
 
-Fullscreen(F11) and the F11 key set the fullscreen bit on the window. The window’s state is what shows or hides the bar, so a desktop that leaves fullscreen on its own cannot leave the bar hidden. Escape clears that bit. While History is open, Escape still closes the sheet, and the next Escape leaves fullscreen. Trash, when it is open, takes the first Escape. F11 does not leave. Entering shows a capsule at the bottom, “Press esc to exit fullscreen”, for two seconds. It is not in the layout, so the writing does not move when it appears.
+Fullscreen(F11) and the F11 key set the fullscreen bit on the window. The window’s state is what shows or hides the bar, so a desktop that leaves fullscreen on its own cannot leave the bar hidden. Escape clears that bit. While History is open, Escape still closes the sheet, and the next Escape leaves fullscreen. Trash, when it is open, takes the first Escape. F11 does not leave. Entering shows a capsule at the bottom, “Press esc to exit fullscreen”, for two seconds. It is not in the layout, so the writing does not move when it appears. The page scrollbar hides with the bar. The wheel and the keys still move the writing, and the scrollbar returns when fullscreen ends. History keeps its own.
 
 ## A note on disk
 

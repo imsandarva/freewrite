@@ -1,7 +1,5 @@
 """The words the session starts with, and the prompts sent to a chat."""
 
-FONT_SIZES = [16, 18, 20, 22, 24, 26]
-
 PLACEHOLDER_OPTIONS = ['Begin writing', 'Pick a thought and go', 'Start typing', "What's on your mind", 'Just start', 'Type your first thought', 'Start with one sentence', 'Just say it']
 
 AI_CHAT_PROMPT = '\nbelow is my journal entry. wyt? talk through it with me like a friend. don\'t therpaize me and give me a whole breakdown, don\'t repeat my thoughts with headings. really take all of this, and tell me back stuff truly as if you\'re an old homie.\n\nKeep it casual, dont say yo, help me make new connections i don\'t see, comfort, validate, challenge, all of it. dont be afraid to say a lot. format with markdown headings if needed.\n\ndo not just go through every single thing i say, and say it back to me. you need to proccess everythikng is say, make connections i don\'t see it, and deliver it all back to me as a story that makes me feel what you think i wanna feel. thats what the best therapists do.\n\nideally, you\'re style/tone should sound like the user themselves. it\'s as if the user is hearing their own tone but it should still feel different, because you have different things to say and don\'t just repeat back they say.\n\nelse, start by saying, "hey, thanks for showing me this. my thoughts:"\n\nmy entry:\n'

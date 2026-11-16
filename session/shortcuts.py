@@ -7,6 +7,7 @@ from PyQt5.QtCore import QEvent, Qt
 from PyQt5.QtWidgets import QApplication
 
 from session.commands import command_for
+from typeface.settings import remember_size
 from typeface.step import step_size
 
 _HISTORY_KEYS = frozenset({Qt.Key_Up, Qt.Key_Down, Qt.Key_Return, Qt.Key_Enter})
@@ -57,6 +58,7 @@ class SessionKeys:
         size = step_size(self.font_sizes, self.font_size, direction)
         if size == self.font_size: return
         self.font_size = size
+        remember_size(size)
         self._apply_writing_font()
 
     def _history_keys_on(self):

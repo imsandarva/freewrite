@@ -40,12 +40,19 @@ class FullscreenControl:
         if is_full == bool(self.is_fullscreen): return
         self.is_fullscreen = is_full
         self.bottom_nav.setVisible(not is_full)
+        self._page_scrollbar(is_full)
         self.main_v_layout.activate()
         self._sync_fullscreen_keys()
         self._fit_history()
         self._show_exit_hint(is_full)
         self.text_edit.setFocus()
         QTimer.singleShot(0, self._fit_history)
+
+    def _page_scrollbar(self, is_full):
+        # Scrolling stays on the wheel and the keys. Only the bar leaves the page.
+        policy = Qt.ScrollBarAlwaysOff if is_full else Qt.ScrollBarAsNeeded
+        self.text_edit.setVerticalScrollBarPolicy(policy)
+        self.text_edit.setHorizontalScrollBarPolicy(policy)
 
     def _show_exit_hint(self, is_full):
         hint = getattr(self, "_exit_hint", None)

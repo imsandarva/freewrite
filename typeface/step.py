@@ -1,5 +1,7 @@
 """The writing sizes, one step at a time. The ends stay put."""
 
+SIZES = (16, 18, 20, 22, 24, 26)
+
 
 def step_size(sizes, current, direction):
     sizes = [int(size) for size in sizes]

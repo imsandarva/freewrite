@@ -15,7 +15,7 @@ from session.fullscreen import FullscreenControl
 from session.history_chrome import HistoryChrome
 from session.pdf_export import PdfExport
 from session.place_flow import PlaceFlow
-from session.prompts import AI_CHAT_PROMPT, CLAUDE_PROMPT, FONT_SIZES, PLACEHOLDER_OPTIONS
+from session.prompts import AI_CHAT_PROMPT, CLAUDE_PROMPT, PLACEHOLDER_OPTIONS
 from session.shortcuts import SessionKeys
 from session.text_direction import TextDirection
 from session.theme import ThemeControl
@@ -24,6 +24,8 @@ from session.trash_flow import TrashFlow
 from papers.catalog import saved_paper
 from sound.key_clicks import KeyClicks
 from sound.settings import saved_sound_on
+from typeface.settings import saved_face, saved_size
+from typeface.step import SIZES
 
 
 class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, FullscreenControl, TextDirection, EntryStore, ChatActions, PdfExport, PlaceFlow, TrashFlow, SessionKeys, QWidget):
@@ -32,14 +34,14 @@ class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, Fullsc
         self.entries = []
         self.text = ""
         self.is_fullscreen = False
-        self.selected_font = "Lato"
+        self.selected_font = saved_face()
         self.time_remaining = 900
         self.timer_is_running = False
         self.is_hovering_timer = False
         self.is_hovering_fullscreen = False
         self.hovered_font = None
         self.is_hovering_size = False
-        self.font_size = 18
+        self.font_size = saved_size()
         self.bottom_nav_opacity = 1.0
         self.is_hovering_bottom_nav = False
         self.selected_entry_id = None
@@ -58,7 +60,7 @@ class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, Fullsc
         self.key_sound = KeyClicks(self.sound_enabled)
         self.did_copy_prompt = False
         self.placeholder_text = ""
-        self.font_sizes = list(FONT_SIZES)
+        self.font_sizes = list(SIZES)
         self.placeholder_options = list(PLACEHOLDER_OPTIONS)
         self.documents_directory = prepare_directory()
         self.library = NoteLibrary(self.documents_directory)

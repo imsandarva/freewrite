@@ -19,10 +19,9 @@ STAMP = "Thu, 12 Nov 2026 16:30:00 +0545"
 MAINTAINER = "Sandarva Paudel <sandarvapoudel182@gmail.com>"
 SIZES = (16, 24, 32, 48, 64, 128, 256, 512)
 ENTRIES = ("main.py", "freewriteApp.py")
-PACKAGES = (
-    "app", "utils", "session", "editing", "typeface", "clock", "switch",
-    "sound", "notes", "history", "place", "choice", "papers",
-)
+# These trees sit beside the app but are not part of it. Everything else with
+# an __init__.py is shipped, so a new package cannot be forgotten again.
+_SKIP = {"freewrite-package", "packaging", "dist", "docs", "assets", "fonts", "app_icons"}
 ASSETS = ("style.qss", "default.md", "pencil_icon.png", "app-icon.png")
 
 DESKTOP = """[Desktop Entry]
@@ -175,6 +174,17 @@ def _icons(stage, master):
     _save_square(master, os.path.join(stage, "usr", "share", "pixmaps", "freewrite.png"), 256)
 
 
+def _packages():
+    """Every package next to the app. A hand-kept list is how trash was left out."""
+    found = []
+    for name in sorted(os.listdir(ROOT)):
+        if name in _SKIP or name.startswith("."): continue
+        path = os.path.join(ROOT, name)
+        if os.path.isdir(path) and os.path.isfile(os.path.join(path, "__init__.py")): found.append(name)
+    if not found: raise SystemExit("No packages were found to install.")
+    return tuple(found)
+
+
 def _copy_package(name, program):
     source = os.path.join(ROOT, name)
     for dirpath, dirnames, filenames in os.walk(source):
@@ -190,7 +200,7 @@ def _stage(stage, master):
     program = os.path.join(stage, "usr", "share", "freewrite")
     for name in ENTRIES:
         _copy(os.path.join(ROOT, name), os.path.join(program, name))
-    for name in PACKAGES:
+    for name in _packages():
         _copy_package(name, program)
     for name in ASSETS:
         _copy(os.path.join(ROOT, "assets", name), os.path.join(program, "assets", name))
@@ -208,12 +218,31 @@ def _stage(stage, master):
     _write(os.path.join(debian, "postrm"), POSTRM, True)
 
 
+def _strip_caches(program):
+    for dirpath, dirnames, _filenames in os.walk(program):
+        for name in [item for item in dirnames if item == "__pycache__"]:
+            shutil.rmtree(os.path.join(dirpath, name))
+            dirnames.remove(name)
+
+
+def _check_imports(program):
+    """The menu launch imports this tree. A missing package has to fail here, not after install."""
+    env = os.environ.copy()
+    env["PYTHONPATH"] = program
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    try: subprocess.check_call([sys.executable, "-c", "import main"], cwd=program, env=env)
+    except subprocess.CalledProcessError: raise SystemExit("The package was staged, but the app could not be imported from it.") from None
+
+
 def build():
     source = _load_icon(os.path.join(ROOT, "assets", "pencil_icon.png"))
     master = _clear_backdrop(source)
     _save_square(master, os.path.join(ROOT, "assets", "app-icon.png"), 512)
     stage = os.path.join(ROOT, "packaging", "stage")
     _stage(stage, master)
+    program = os.path.join(stage, "usr", "share", "freewrite")
+    _check_imports(program)
+    _strip_caches(program)
     desktop = os.path.join(stage, "usr", "share", "applications", "freewrite.desktop")
     subprocess.check_call(["desktop-file-validate", desktop])
     dist = os.path.join(ROOT, "dist")

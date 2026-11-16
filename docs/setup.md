@@ -36,15 +36,17 @@ The package puts the code in `/usr/share/freewrite`, the launcher at `/usr/bin/f
 
 `main.py` is the installed entry. It sets the locale to English (United States) so the writing surface stays left to right, and it names the window `freewrite` so the desktop can match it to that menu entry. Styles, the welcome note, and the icon are read from beside the packages (`app/paths.py`), so a menu launch finds them no matter which folder the session started in. Theme changes reload that same stylesheet.
 
-Edit the packages at the project root, then run the build script again. The tree under `freewrite-package/` is an older packaging sketch and is not what `build_deb.py` ships.
+Edit the packages at the project root, then run the build script again. Every folder there that contains `__init__.py` is copied, and the build stops if that copy cannot be imported. `freewrite-package/` is an older packaging sketch and is not what `build_deb.py` ships.
 
 ## Settings
 
-`QSettings("humansongs", "freewrite")` stores four values:
+`QSettings("humansongs", "freewrite")` stores six values. Face, size, and paper are written through as soon as they change, so closing the app in a hurry still keeps them.
 
 | Key | Meaning |
 | --- | --- |
 | `colorScheme` | `white`, `ivory`, `sepia`, `charcoal`, or `black`. Missing means white. An older `light` is white, and an older `dark` is black. |
+| `writingFace` | `Lato`, `Arial`, `System`, or `Serif`. Missing, or anything else, means Lato. |
+| `writingSize` | `16`, `18`, `20`, `22`, `24`, or `26`. Missing, or anything else, means 18. |
 | `backspaceEnabled` | Whether Backspace deletes. Missing means on. |
 | `soundEnabled` | Whether typing makes a soft click. Missing means on. |
 | `notesDirectory` | Folder notes are saved in. Missing means `~/freewrite_notes`. |

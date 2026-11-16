@@ -9,6 +9,7 @@ setting opens on Black, which is the black the app used before.
 from PyQt5.QtCore import QSettings
 
 from utils.qsettings_identity import APP, ORG
+from utils.remember import remember_value
 
 _KEY = "colorScheme"
 _LEGACY = {"light": "white", "dark": "black"}
@@ -72,4 +73,4 @@ def saved_paper():
 
 
 def remember_paper(paper):
-    QSettings(ORG, APP).setValue(_KEY, paper.key)
+    remember_value(_KEY, paper.key)

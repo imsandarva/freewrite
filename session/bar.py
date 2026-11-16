@@ -12,6 +12,7 @@ from sound.settings import remember_sound
 from switch.quiet_switch import QuietSwitch
 from typeface.apply_face import apply_face
 from typeface.bar_rule import BarRule
+from typeface.settings import remember_face
 from typeface.text_button import text_button
 from typeface.type_cycle import TypeCycle
 
@@ -24,7 +25,7 @@ class BarControls:
         self.bottom_nav_layout = QHBoxLayout(self.bottom_nav)
         self.bottom_nav_layout.setContentsMargins(18, 2, 12, 6)
         self.bottom_nav_layout.setSpacing(0)
-        self.type_cycle = TypeCycle(paper)
+        self.type_cycle = TypeCycle(paper, self.selected_font)
         self.type_cycle.chosen.connect(self.use_typeface)
         self.selected_font = self.type_cycle.family()
         self.bar_rule = BarRule(paper)
@@ -70,6 +71,7 @@ class BarControls:
 
     def use_typeface(self, family):
         self.selected_font = family
+        remember_face(self.type_cycle.label())
         self._apply_writing_font()
         self._return_to_page(self.type_cycle)
 
