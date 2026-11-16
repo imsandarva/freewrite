@@ -7,7 +7,6 @@ from clock.quiet_clock import QuietClock
 from editing.backspace_pref import remember_backspace
 from papers.catalog import paper_for
 from papers.cycle import PaperCycle
-from session.fullscreen import ENTER_LABEL
 from sound.settings import remember_sound
 from switch.quiet_switch import QuietSwitch
 from typeface.apply_face import apply_face
@@ -37,8 +36,6 @@ class BarControls:
         self.clock.clicked.connect(self.toggle_timer)
         self.chat_btn = text_button("Chat")
         self.chat_btn.clicked.connect(self.show_chat_menu)
-        self.fullscreen_btn = text_button(ENTER_LABEL)
-        self.fullscreen_btn.clicked.connect(self.enter_fullscreen)
         self.new_entry_btn = text_button("New Entry")
         self.new_entry_btn.clicked.connect(self.create_new_entry)
         self.paper_cycle = PaperCycle(paper)
@@ -51,7 +48,7 @@ class BarControls:
         ):
             self._add_bar(widget, gap)
         self.bottom_nav_layout.addStretch(1)
-        for button in (self.chat_btn, self.fullscreen_btn, self.new_entry_btn, self.paper_cycle, self.history_btn):
+        for button in (self.chat_btn, self.new_entry_btn, self.paper_cycle, self.history_btn):
             self._add_bar(button, 0)
 
     def _add_bar(self, widget, gap):

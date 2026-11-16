@@ -12,7 +12,7 @@ def main():
     QLocale.setDefault(QLocale(QLocale.English, QLocale.UnitedStates))
     prepare_app(app)
     window = FreewriteApp()
-    window.show()
+    window.present()
     return app.exec_()
 
 

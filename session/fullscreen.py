@@ -6,8 +6,6 @@ from PyQt5.QtWidgets import QShortcut
 
 from session.exit_hint import ExitHint
 
-ENTER_LABEL = "Fullscreen(F11)"
-
 
 class FullscreenControl:
     def _wire_fullscreen(self):

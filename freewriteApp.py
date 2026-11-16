@@ -8,5 +8,5 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     prepare_app(app)
     window = FreewriteApp()
-    window.show()
+    window.present()
     sys.exit(app.exec_())

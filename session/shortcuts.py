@@ -1,4 +1,4 @@
-"""Ctrl+N, Ctrl+H, and the type-size keys.
+"""Ctrl+N, Ctrl+H, Ctrl+W, and the type-size keys.
 
 Arrows and Enter are watched here too. The writing page accepts those keys before a normal shortcut can see them, so History would never hear them.
 """
@@ -11,7 +11,7 @@ from typeface.settings import remember_size
 from typeface.step import step_size
 
 _HISTORY_KEYS = frozenset({Qt.Key_Up, Qt.Key_Down, Qt.Key_Return, Qt.Key_Enter})
-_ONCE = frozenset({"new", "history"})
+_ONCE = frozenset({"new", "history", "close"})
 
 
 class SessionKeys:
@@ -30,16 +30,30 @@ class SessionKeys:
         return super().eventFilter(_watched, event)
 
     def _take_key(self, event):
-        if QApplication.activeModalWidget() is not None: return False
-        if not self._key_window_is_ours(): return False
+        if not self._key_is_ours(): return False
+        # A question stays in front. Only closing is taken, and it closes that question.
+        if QApplication.activeModalWidget() is not None: return self._take_close(event)
         if self._take_command(event): return True
         if self._history_keys_on() and self._take_history_key(event): return True
         return False
+
+    def _take_close(self, event):
+        if command_for(event.key(), event.modifiers()) != "close": return False
+        if not event.isAutoRepeat(): self._close_from_key()
+        return True
 
     def _key_window_is_ours(self):
         focus = QApplication.focusWidget()
         window = focus.window() if focus is not None else QApplication.activeWindow()
         return window is not None and window is self.window()
+
+    def _key_is_ours(self):
+        if self._key_window_is_ours(): return True
+        modal = QApplication.activeModalWidget()
+        ours = self.window()
+        if modal is None or ours is None: return False
+        parent = modal.parent()
+        return parent is ours or parent is self
 
     def _take_command(self, event):
         action = command_for(event.key(), event.modifiers())
@@ -49,10 +63,19 @@ class SessionKeys:
         return True
 
     def _run_command(self, action):
-        if action == "new": self.create_new_entry()
+        if action == "close": self._close_from_key()
+        elif action == "new": self.create_new_entry()
         elif action == "history": self.toggle_history()
         elif action == "larger": self._step_font(1)
         elif action == "smaller": self._step_font(-1)
+
+    def _close_from_key(self):
+        modal = QApplication.activeModalWidget()
+        if modal is not None:
+            modal.close()
+            return
+        window = self.window()
+        if window is not None: window.close()
 
     def _step_font(self, direction):
         size = step_size(self.font_sizes, self.font_size, direction)

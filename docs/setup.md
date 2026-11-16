@@ -24,7 +24,7 @@ python3 packaging/build_deb.py
 
 That writes `dist/freewrite_1.1.0_all.deb`, then asks whether to install or update Freewrite on this computer. Answer `y` to do that. You may be asked for your password. Any other answer only builds the installer.
 
-The same version is replaced on purpose, so a rebuild updates the copy already on the computer. Saying yes also installs `python3-pyqt5` and `libpulse0` if they are missing. After that, Freewrite is an application: search for it by name in the menu and open it from there. The command `freewrite` also starts it. The icon is the pencil in `assets/pencil_icon.png`, with the plain gray backdrop removed so it sits cleanly in the menu.
+The same version is replaced on purpose, so a rebuild updates the copy already on the computer. Saying yes also installs `python3-pyqt5` and `libpulse0` if they are missing. After that, Freewrite is an application: search for Freewrite in the menu and open it from there. The menu entry answers to that name only, so a search for a notepad does not offer it. The command `freewrite` also starts it. The icon is the pencil in `assets/pencil_icon.png`, with the plain gray backdrop removed so it sits cleanly in the menu.
 
 To put the installer on later, without running the question again:
 
@@ -40,7 +40,7 @@ Edit the packages at the project root, then run the build script again. Every fo
 
 ## Settings
 
-`QSettings("humansongs", "freewrite")` stores six values. Face, size, and paper are written through as soon as they change, so closing the app in a hurry still keeps them.
+`QSettings("humansongs", "freewrite")` stores eight values. Face, size, and paper are written through as soon as they change, so closing the app in a hurry still keeps them. The window form is written when it changes, and again as the window closes.
 
 | Key | Meaning |
 | --- | --- |
@@ -50,6 +50,8 @@ Edit the packages at the project root, then run the build script again. Every fo
 | `backspaceEnabled` | Whether Backspace deletes. Missing means on. |
 | `soundEnabled` | Whether typing makes a soft click. Missing means on. |
 | `notesDirectory` | Folder notes are saved in. Missing means `~/freewrite_notes`. |
+| `windowGeometry` | The ordinary window rectangle, from Qt’s `saveGeometry`. Missing means 1100×600, centered on the screen under the cursor. A rectangle that misses every screen is centered too. |
+| `windowMaximized` | Whether the next launch is maximized. Missing means no. Fullscreen is not remembered. |
 
 For the two switches, stored booleans and the strings `0`, `false`, `no`, and `off` count as off.
 

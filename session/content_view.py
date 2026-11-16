@@ -38,7 +38,6 @@ class ContentView(BarControls, HistoryChrome, TimerControl, ThemeControl, Fullsc
         self.time_remaining = 900
         self.timer_is_running = False
         self.is_hovering_timer = False
-        self.is_hovering_fullscreen = False
         self.hovered_font = None
         self.is_hovering_size = False
         self.font_size = saved_size()

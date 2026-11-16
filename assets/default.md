@@ -25,7 +25,7 @@ It’s led to real breakthroughs — like helping me untangle big feelings aroun
 Using this app is actually super simple:
 
 1. Think of a topic to write about (ex. a breakup, a struggle at work, a new idea)
-2. Click fullscreen
+2. Press F11
 3. Click the timer
 4. Start writing. No backspaces allowed. Don’t stop writing.
 

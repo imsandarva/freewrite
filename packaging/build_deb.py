@@ -24,11 +24,13 @@ ENTRIES = ("main.py", "freewriteApp.py")
 _SKIP = {"freewrite-package", "packaging", "dist", "docs", "assets", "fonts", "app_icons"}
 ASSETS = ("style.qss", "default.md", "pencil_icon.png", "app-icon.png")
 
+# Search matches the name as a prefix, and any keyword the same way. A keyword
+# such as "notes" put Freewrite ahead of the text editor for the search "note".
+# The name is the only word it answers to.
 DESKTOP = """[Desktop Entry]
 Version=1.0
 Type=Application
 Name=Freewrite
-GenericName=Writing
 Comment=A quiet place to write
 Exec=freewrite
 TryExec=freewrite
@@ -37,7 +39,6 @@ Terminal=false
 StartupNotify=true
 StartupWMClass=freewrite
 Categories=Office;WordProcessor;
-Keywords=write;writing;journal;notes;editor;text;freewrite;
 """
 
 CONTROL = """Package: freewrite

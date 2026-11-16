@@ -1,12 +1,14 @@
 # Workflows
 
-The bottom bar is the whole interface. On the left: one face control (it opens on Lato), Backspace, Sound, and a 15:00 timer. On the right: Chat, Fullscreen(F11), New Entry, the paper name (it opens on White), and History.
+The bottom bar is the whole interface. On the left: one face control (it opens on Lato), Backspace, Sound, and a 15:00 timer. On the right: Chat, New Entry, the paper name (it opens on White), and History.
 
-Ctrl+N starts a new note. Ctrl+H opens and closes History. In History, Up and Down move between notes and Enter opens the marked one. Ctrl++ and Ctrl+- change the type size, and so does Ctrl+=. The size steps through 16, 18, 20, 22, 24, and 26, and it does not wrap past either end.
+Ctrl+N starts a new note. Ctrl+H opens and closes History. Ctrl+W closes the window. A question that is open closes first, and the writing stays. In History, Up and Down move between notes and Enter opens the marked one. Ctrl++ and Ctrl+- change the type size, and so does Ctrl+=. The size steps through 16, 18, 20, 22, 24, and 26, and it does not wrap past either end.
 
 Backspace and Sound are pills, with no On or Off written on them. The knob on the left, on a neutral track, is off. The knob on the right, on the warm fill, is on. Sound, when on, makes a quiet click as you type. When it is off, the keys are silent. Backspace, when off, neither erases nor clicks.
 
 ## Launch
+
+The window opens in the ordinary size and place it last had, or maximized when it was closed that way. The first launch is 1100×600, centered on the screen under the cursor. Fullscreen and the taskbar are not restored. `windowGeometry` is the ordinary rectangle. `windowMaximized` is whether that launch should be maximized.
 
 `NoteLibrary.load()` reads the remembered notes folder (`~/freewrite_notes` until you choose another), migrates legacy names, and returns entries newest first.
 
@@ -52,4 +54,4 @@ Ctrl++ and Ctrl+- step the type size through 16, 18, 20, 22, 24, and 26. Holding
 
 The paper name cycles White, Warm White, Sepia, Charcoal, and Black. The first launch is White. Each press steps once and is remembered. The page, the bar, History, and the folder prompt all follow that paper.
 
-Fullscreen(F11), and the F11 key, ask the window to fill the screen. The bar hides with it, and so does the scrollbar on the page. The writing still moves with the wheel and the keys. A small note at the bottom reads “Press esc to exit fullscreen” and leaves after two seconds. Leaving fullscreen brings the bar and the scrollbar back. Escape leaves fullscreen. While Trash is open, Escape closes Trash first. While History is open, Escape closes the sheet, and the next Escape leaves fullscreen. F11 does not leave.
+F11 asks the window to fill the screen. The bar has no control for it. The bar hides with it, and so does the scrollbar on the page. The writing still moves with the wheel and the keys. A small note at the bottom reads “Press esc to exit fullscreen” and leaves after two seconds. Leaving fullscreen brings the bar and the scrollbar back. Escape leaves fullscreen. While Trash is open, Escape closes Trash first. While History is open, Escape closes the sheet, and the next Escape leaves fullscreen. F11 does not leave.
