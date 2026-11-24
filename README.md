@@ -8,12 +8,12 @@ freewrite is a minimalist freewriting software that lets you write with minimal 
 
 # Installation
 ### Method 1: Direct Download
-1. Download the [latest release .deb file](https://github.com/sandarva3/freewrite/releases/latest)
-2. Install with:    sudo apt install ./freewrite_1.0.0_all.deb
+1. Download the [latest release .deb file](https://github.com/imsandarva/freewrite/releases/latest)
+2. Install with:    sudo apt install ./freewrite_1.1.0_all.deb
 
 ### Method 2: Using wget
-1. Open your terminal and paste this: wget https://github.com/sandarva3/freewrite/releases/download/v1.0.0/freewrite_1.0.0_all.deb
-2. Install with:    sudo apt install ./freewrite_1.0.0_all.deb
+1. Open your terminal and paste this: wget https://github.com/imsandarva/freewrite/releases/download/v1.1.0/freewrite_1.1.0_all.deb
+2. Install with:    sudo apt install ./freewrite_1.1.0_all.deb
 
 
 download latest mac-os-version version [here](https://www.freewrite.io/)
